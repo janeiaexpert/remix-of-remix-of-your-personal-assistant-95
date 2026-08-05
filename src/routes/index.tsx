@@ -5,7 +5,7 @@ import ReactMarkdown from "react-markdown";
 import { Mic, MicOff, Send, Volume2, VolumeX, Trash2, Brain, X, Plus, Plug, PlugZap } from "lucide-react";
 import { askJarvis, extractMemories } from "@/lib/jarvis.functions";
 import { useSpeech, speak, cancelSpeech, primeAudio } from "@/lib/speech";
-import { loadBridge, saveBridge, health, runTool, type BridgeConfig } from "@/lib/bridge";
+import { loadBridge, saveBridge, loadBridgeDraft, saveBridgeDraft, health, runTool, type BridgeConfig } from "@/lib/bridge";
 import { cn } from "@/lib/utils";
 
 type Msg = { role: "user" | "assistant"; content: string };
@@ -90,6 +90,11 @@ function Jarvis() {
     setMessages(loadMessages());
     setMemories(loadMemories());
     const b = loadBridge();
+    const draft = loadBridgeDraft();
+    if (draft) {
+      setBridgeUrl(draft.url);
+      setBridgeToken(draft.token);
+    }
     if (b) {
       setBridge(b);
       bridgeRef.current = b;
@@ -101,6 +106,12 @@ function Jarvis() {
   }, []);
 
   useEffect(() => { bridgeRef.current = bridge; }, [bridge]);
+
+  // Persist o que foi digitado no painel (URL + token), mesmo sem conexão OK
+  useEffect(() => {
+    if (!hydrated) return;
+    saveBridgeDraft({ url: bridgeUrl, token: bridgeToken });
+  }, [bridgeUrl, bridgeToken, hydrated]);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -117,6 +128,7 @@ function Jarvis() {
   }, [messages, loading]);
 
   useEffect(() => { inputRef.current?.focus(); }, []);
+
 
   const testBridge = useCallback(async () => {
     const cfg = { url: bridgeUrl.trim().replace(/\/$/, ""), token: bridgeToken.trim() };
