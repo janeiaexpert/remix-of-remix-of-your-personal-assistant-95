@@ -86,3 +86,33 @@ export async function runTool(
       throw new Error(`Unknown local tool: ${name}`);
   }
 }
+
+// --- Draft (campos do painel) ------------------------------------------------
+// Persistido separadamente da config validada, para que a URL e o token
+// digitados sobrevivam a um recarregamento mesmo sem teste bem-sucedido.
+
+const DRAFT_KEY = "jarvis:bridge:draft:v1";
+
+export function loadBridgeDraft(): BridgeConfig | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(DRAFT_KEY);
+    if (!raw) return null;
+    const p = JSON.parse(raw) as Partial<BridgeConfig>;
+    if (p && typeof p.url === "string" && typeof p.token === "string") {
+      return { url: p.url, token: p.token };
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+export function saveBridgeDraft(draft: BridgeConfig): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+  } catch {
+    /* quota */
+  }
+}
