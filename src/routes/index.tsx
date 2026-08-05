@@ -90,6 +90,11 @@ function Jarvis() {
     setMessages(loadMessages());
     setMemories(loadMemories());
     const b = loadBridge();
+    const draft = loadBridgeDraft();
+    if (draft) {
+      setBridgeUrl(draft.url);
+      setBridgeToken(draft.token);
+    }
     if (b) {
       setBridge(b);
       bridgeRef.current = b;
@@ -101,6 +106,12 @@ function Jarvis() {
   }, []);
 
   useEffect(() => { bridgeRef.current = bridge; }, [bridge]);
+
+  // Persist o que foi digitado no painel (URL + token), mesmo sem conexão OK
+  useEffect(() => {
+    if (!hydrated) return;
+    saveBridgeDraft({ url: bridgeUrl, token: bridgeToken });
+  }, [bridgeUrl, bridgeToken, hydrated]);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -117,6 +128,7 @@ function Jarvis() {
   }, [messages, loading]);
 
   useEffect(() => { inputRef.current?.focus(); }, []);
+
 
   const testBridge = useCallback(async () => {
     const cfg = { url: bridgeUrl.trim().replace(/\/$/, ""), token: bridgeToken.trim() };
