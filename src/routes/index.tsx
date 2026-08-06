@@ -84,6 +84,7 @@ function Jarvis() {
   const [bridgeUrl, setBridgeUrl] = useState("http://127.0.0.1:7842");
   const [bridgeToken, setBridgeToken] = useState("");
   const [bridgeError, setBridgeError] = useState<string | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
   const [toolLog, setToolLog] = useState<string[]>([]);
   const bridgeRef = useRef<BridgeConfig | null>(null);
   const memoriesRef = useRef<string[]>([]);
