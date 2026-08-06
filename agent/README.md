@@ -41,7 +41,8 @@ You'll see something like:
 
 | Env var        | Default                      | Purpose                                  |
 | -------------- | ---------------------------- | ---------------------------------------- |
-| `JARVIS_PORT`  | `7842`                       | Port to listen on (localhost only)       |
+| `JARVIS_HOST`  | `127.0.0.1`                  | Interface to bind (`0.0.0.0` = any)      |
+| `JARVIS_PORT`  | `7842`                       | Port to listen on                        |
 | `JARVIS_TOKEN` | random, printed on startup   | Fix the token instead of regenerating    |
 | `JARVIS_CWD`   | current directory            | Base directory for relative paths        |
 
@@ -51,11 +52,20 @@ Example:
 JARVIS_PORT=9000 JARVIS_TOKEN=meutokensecreto JARVIS_CWD=~/dev python3 agent/jarvis_agent.py
 ```
 
+## Mobile access
+
+By default the agent binds to `127.0.0.1`, so it can only be reached from the same computer. To use it from a phone or tablet on the same Wi-Fi, bind it to the local network:
+
+```bash
+JARVIS_HOST=0.0.0.0 python3 agent/jarvis_agent.py
+```
+
+The startup log will print your computer's local IP addresses (e.g. `http://192.168.1.50:7842`). Use that IP + token in the Jarvis mobile UI. Keep the token secret — anyone on your network with it can run commands as you.
+
 ## Security
 
-- Binds to `127.0.0.1` only — never reachable from the network.
+- Default mode binds to `127.0.0.1` only — never reachable from the network.
 - Every request requires `Authorization: Bearer <token>`.
-- Shell commands run **as your user, with your permissions**. Treat this
-  like giving Jarvis a terminal on your machine — because that's exactly
-  what it is. Only use tokens you generated yourself.
+- Shell commands run **as your user, with your permissions**. Treat this like giving Jarvis a terminal on your machine — because that's exactly what it is. Only use tokens you generated yourself.
+- When you enable `JARVIS_HOST=0.0.0.0`, the agent becomes reachable from any device on your local network. Use it only on trusted networks, and never expose the port to the public internet.
 - Stop it with `Ctrl+C` when you're done.
