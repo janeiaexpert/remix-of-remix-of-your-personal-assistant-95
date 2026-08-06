@@ -176,6 +176,25 @@ function Jarvis() {
     setBridge(null); bridgeRef.current = null; saveBridge(null); setBridgeStatus("offline");
   }, []);
 
+  // QR code de pareamento (URL + token) para escanear no celular
+  useEffect(() => {
+    if (!qrOpen) { setQrImage(null); return; }
+    const url = bridgeUrl.trim();
+    const token = bridgeToken.trim();
+    if (!url || !token) { setQrImage(null); return; }
+    let alive = true;
+    void QRCode.toDataURL(pairingUrl({ url, token }), {
+      width: 320,
+      margin: 1,
+      errorCorrectionLevel: "M",
+      color: { dark: "#0b1622", light: "#ffffff" },
+    })
+      .then((data) => { if (alive) setQrImage(data); })
+      .catch(() => { if (alive) setQrImage(null); });
+    return () => { alive = false; };
+  }, [qrOpen, bridgeUrl, bridgeToken]);
+
+
   const send = useCallback(
     async (text: string) => {
       const clean = text.trim();
