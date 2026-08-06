@@ -237,6 +237,14 @@ def main() -> None:
     print(f"  URL       : http://{HOST}:{PORT}")
     print(f"  Token     : {TOKEN}")
     print(f"  Base cwd  : {BASE_CWD}")
+    print(f"  Bind host : {HOST}")
+    if HOST in ("0.0.0.0", ""):
+        ips = _local_ips()
+        if ips:
+            print("  Local IPs :", ", ".join(f"http://{ip}:{PORT}" for ip in ips))
+        print("  WARNING   : exposed to your local network — keep token secret.")
+    else:
+        print("  Scope     : localhost only (use JARVIS_HOST=0.0.0.0 for mobile)")
     print("=" * 60)
     print("  Paste the URL and token into the Jarvis web UI (Bridge panel).")
     print("  Ctrl+C to stop.")
