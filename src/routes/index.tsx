@@ -2,10 +2,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import ReactMarkdown from "react-markdown";
-import { Mic, MicOff, Send, Volume2, VolumeX, Trash2, Brain, X, Plus, Plug, PlugZap } from "lucide-react";
+import { Mic, MicOff, Send, Volume2, VolumeX, Trash2, Brain, X, Plus, Plug, PlugZap, QrCode } from "lucide-react";
 import { askJarvis, extractMemories } from "@/lib/jarvis.functions";
 import { useSpeech, speak, cancelSpeech, primeAudio } from "@/lib/speech";
-import { loadBridge, saveBridge, loadBridgeDraft, saveBridgeDraft, health, runTool, type BridgeConfig } from "@/lib/bridge";
+import { loadBridge, saveBridge, loadBridgeDraft, saveBridgeDraft, health, runTool, pairingUrl, readPairingFromHash, type BridgeConfig } from "@/lib/bridge";
+import QRCode from "qrcode";
 import { cn } from "@/lib/utils";
 
 type Msg = { role: "user" | "assistant"; content: string };
@@ -86,6 +87,8 @@ function Jarvis() {
   const [bridgeError, setBridgeError] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(false);
   const [toolLog, setToolLog] = useState<string[]>([]);
+  const [qrImage, setQrImage] = useState<string | null>(null);
+  const [qrOpen, setQrOpen] = useState(false);
   const bridgeRef = useRef<BridgeConfig | null>(null);
   const memoriesRef = useRef<string[]>([]);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -98,21 +101,38 @@ function Jarvis() {
     setIsMobile(isMobileDevice());
     setMessages(loadMessages());
     setMemories(loadMemories());
-    const b = loadBridge();
+    const paired = readPairingFromHash();
+    const b = paired ?? loadBridge();
     const draft = loadBridgeDraft();
-    if (draft) {
+    if (draft && !paired) {
       setBridgeUrl(draft.url);
       setBridgeToken(draft.token);
     }
     if (b) {
-      setBridge(b);
-      bridgeRef.current = b;
       setBridgeUrl(b.url);
       setBridgeToken(b.token);
-      void health(b).then(() => setBridgeStatus("online")).catch(() => setBridgeStatus("error"));
+      if (paired) {
+        setBridgeOpen(true);
+        setBridgeError(null);
+      } else {
+        setBridge(b);
+        bridgeRef.current = b;
+      }
+      void health(b)
+        .then(() => {
+          setBridge(b);
+          bridgeRef.current = b;
+          saveBridge(b);
+          setBridgeStatus("online");
+        })
+        .catch((e: unknown) => {
+          setBridgeStatus("error");
+          if (paired) setBridgeError(e instanceof Error ? e.message : "Falha ao conectar");
+        });
     }
     setHydrated(true);
   }, []);
+
 
   useEffect(() => { bridgeRef.current = bridge; }, [bridge]);
 
@@ -155,6 +175,25 @@ function Jarvis() {
   const disconnectBridge = useCallback(() => {
     setBridge(null); bridgeRef.current = null; saveBridge(null); setBridgeStatus("offline");
   }, []);
+
+  // QR code de pareamento (URL + token) para escanear no celular
+  useEffect(() => {
+    if (!qrOpen) { setQrImage(null); return; }
+    const url = bridgeUrl.trim();
+    const token = bridgeToken.trim();
+    if (!url || !token) { setQrImage(null); return; }
+    let alive = true;
+    void QRCode.toDataURL(pairingUrl({ url, token }), {
+      width: 320,
+      margin: 1,
+      errorCorrectionLevel: "M",
+      color: { dark: "#0b1622", light: "#ffffff" },
+    })
+      .then((data) => { if (alive) setQrImage(data); })
+      .catch(() => { if (alive) setQrImage(null); });
+    return () => { alive = false; };
+  }, [qrOpen, bridgeUrl, bridgeToken]);
+
 
   const send = useCallback(
     async (text: string) => {
@@ -394,6 +433,14 @@ function Jarvis() {
               >
                 Testar / conectar
               </button>
+              <button
+                type="button"
+                onClick={() => setQrOpen((o) => !o)}
+                disabled={!bridgeUrl.trim() || !bridgeToken.trim()}
+                className="flex items-center gap-1.5 rounded border border-hud/40 px-3 py-1.5 font-mono text-xs text-hud hover:bg-hud/10 disabled:opacity-40"
+              >
+                <QrCode size={13} /> {qrOpen ? "Ocultar QR" : "QR p/ celular"}
+              </button>
               {bridge && (
                 <button
                   type="button"
@@ -404,6 +451,30 @@ function Jarvis() {
                 </button>
               )}
             </div>
+            {qrOpen && (
+              <div className="mt-3 rounded border border-hud/20 bg-black/40 p-3">
+                {qrImage ? (
+                  <div className="flex flex-col items-center gap-2">
+                    <img
+                      src={qrImage}
+                      alt="QR code de pareamento da bridge local do J.A.R.V.I.S."
+                      className="h-44 w-44 rounded bg-white p-1"
+                    />
+                    <p className="text-center font-mono text-[10px] leading-relaxed text-muted-foreground">
+                      Escaneie com a câmera do celular — o Jarvis abre já com IP e token preenchidos e tenta conectar.
+                    </p>
+                    {isLoopback(bridgeUrl) && (
+                      <p className="text-center font-mono text-[10px] text-gold">
+                        ⚠ A URL é localhost: o celular não vai alcançar. Troque pelo IP local (ex: http://192.168.1.50:7842) antes de escanear.
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <p className="font-mono text-[10px] text-muted-foreground">Gerando QR…</p>
+                )}
+              </div>
+            )}
+
             {toolLog.length > 0 && (
               <div className="mt-3 max-h-32 overflow-y-auto rounded border border-hud/20 bg-black/40 p-2 font-mono text-[10px] text-hud/80">
                 {toolLog.map((l, i) => (<div key={i}>{l}</div>))}

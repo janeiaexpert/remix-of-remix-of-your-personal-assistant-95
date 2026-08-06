@@ -116,3 +116,48 @@ export function saveBridgeDraft(draft: BridgeConfig): void {
     /* quota */
   }
 }
+
+// --- Pareamento por QR code --------------------------------------------------
+// Codifica URL + token num fragmento de URL (nunca enviado ao servidor),
+// para que o celular escaneie e preencha os campos automaticamente.
+
+const PAIR_HASH_KEY = "jarvis-bridge";
+
+function toBase64Url(s: string): string {
+  const b64 = btoa(unescape(encodeURIComponent(s)));
+  return b64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+function fromBase64Url(s: string): string {
+  const b64 = s.replace(/-/g, "+").replace(/_/g, "/");
+  const padded = b64 + "=".repeat((4 - (b64.length % 4)) % 4);
+  return decodeURIComponent(escape(atob(padded)));
+}
+
+export function pairingUrl(cfg: BridgeConfig): string {
+  const payload = toBase64Url(JSON.stringify({ u: cfg.url.replace(/\/$/, ""), t: cfg.token }));
+  const { origin, pathname } = window.location;
+  return `${origin}${pathname}#${PAIR_HASH_KEY}=${payload}`;
+}
+
+export function readPairingFromHash(): BridgeConfig | null {
+  if (typeof window === "undefined") return null;
+  const hash = window.location.hash.replace(/^#/, "");
+  if (!hash.startsWith(`${PAIR_HASH_KEY}=`)) return null;
+  try {
+    const parsed = JSON.parse(fromBase64Url(hash.slice(PAIR_HASH_KEY.length + 1))) as {
+      u?: string;
+      t?: string;
+    };
+    if (typeof parsed.u !== "string" || typeof parsed.t !== "string") return null;
+    return { url: parsed.u.replace(/\/$/, ""), token: parsed.t };
+  } catch {
+    return null;
+  } finally {
+    try {
+      window.history.replaceState(null, "", window.location.pathname + window.location.search);
+    } catch {
+      /* ignore */
+    }
+  }
+}
