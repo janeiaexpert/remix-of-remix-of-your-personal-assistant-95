@@ -344,9 +344,29 @@ function Jarvis() {
                 <X size={14} />
               </button>
             </div>
-            <p className="mb-3 font-mono text-[10px] leading-relaxed text-muted-foreground">
-              Rode <code className="text-hud">python3 agent/jarvis_agent.py</code> na sua máquina, cole a URL e o token abaixo, e o Jarvis passa a executar shell/arquivos aí.
-            </p>
+            {isMobile ? (
+              <>
+                <p className="mb-3 font-mono text-[10px] leading-relaxed text-muted-foreground">
+                  <span className="text-gold">Aviso móvel:</span> o navegador do celular não acessa o localhost da sua estação de trabalho.
+                  Para usar a bridge a partir deste dispositivo, rode o agente com acesso à rede local:
+                </p>
+                <pre className="mb-3 overflow-x-auto rounded border border-hud/20 bg-black/50 p-2 font-mono text-[10px] text-hud/90">
+                  JARVIS_HOST=0.0.0.0 python3 agent/jarvis_agent.py
+                </pre>
+                <p className="mb-3 font-mono text-[10px] leading-relaxed text-muted-foreground">
+                  Cole abaixo o <strong>endereço IP local</strong> do seu computador (ex: <code className="text-hud">http://192.168.1.50:7842</code>), não 127.0.0.1.
+                </p>
+                {isLoopback(bridgeUrl) && (
+                  <p className="mb-3 font-mono text-[10px] text-gold">
+                    ⚠ O campo URL está como localhost. Troque pelo IP local do computador onde o agente está rodando.
+                  </p>
+                )}
+              </>
+            ) : (
+              <p className="mb-3 font-mono text-[10px] leading-relaxed text-muted-foreground">
+                Rode <code className="text-hud">python3 agent/jarvis_agent.py</code> na sua máquina, cole a URL e o token abaixo, e o Jarvis passa a executar shell/arquivos aí.
+              </p>
+            )}
             <div className="mb-2 flex gap-2">
               <input
                 value={bridgeUrl}
