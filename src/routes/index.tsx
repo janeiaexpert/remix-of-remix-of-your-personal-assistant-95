@@ -87,6 +87,8 @@ function Jarvis() {
   const [bridgeError, setBridgeError] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(false);
   const [toolLog, setToolLog] = useState<string[]>([]);
+  const [qrImage, setQrImage] = useState<string | null>(null);
+  const [qrOpen, setQrOpen] = useState(false);
   const bridgeRef = useRef<BridgeConfig | null>(null);
   const memoriesRef = useRef<string[]>([]);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -99,21 +101,38 @@ function Jarvis() {
     setIsMobile(isMobileDevice());
     setMessages(loadMessages());
     setMemories(loadMemories());
-    const b = loadBridge();
+    const paired = readPairingFromHash();
+    const b = paired ?? loadBridge();
     const draft = loadBridgeDraft();
-    if (draft) {
+    if (draft && !paired) {
       setBridgeUrl(draft.url);
       setBridgeToken(draft.token);
     }
     if (b) {
-      setBridge(b);
-      bridgeRef.current = b;
       setBridgeUrl(b.url);
       setBridgeToken(b.token);
-      void health(b).then(() => setBridgeStatus("online")).catch(() => setBridgeStatus("error"));
+      if (paired) {
+        setBridgeOpen(true);
+        setBridgeError(null);
+      } else {
+        setBridge(b);
+        bridgeRef.current = b;
+      }
+      void health(b)
+        .then(() => {
+          setBridge(b);
+          bridgeRef.current = b;
+          saveBridge(b);
+          setBridgeStatus("online");
+        })
+        .catch((e: unknown) => {
+          setBridgeStatus("error");
+          if (paired) setBridgeError(e instanceof Error ? e.message : "Falha ao conectar");
+        });
     }
     setHydrated(true);
   }, []);
+
 
   useEffect(() => { bridgeRef.current = bridge; }, [bridge]);
 
