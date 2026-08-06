@@ -26,19 +26,32 @@ Endpoints:
 """
 from __future__ import annotations
 
-import json
-import os
-import secrets
+import socket
 import subprocess
 import sys
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
-HOST = "127.0.0.1"
+HOST = os.environ.get("JARVIS_HOST", "127.0.0.1")
 PORT = int(os.environ.get("JARVIS_PORT", "7842"))
 TOKEN = os.environ.get("JARVIS_TOKEN") or secrets.token_urlsafe(24)
 BASE_CWD = Path(os.environ.get("JARVIS_CWD", os.getcwd())).expanduser().resolve()
 MAX_READ = 512 * 1024  # 512 KB
+
+
+def _local_ips() -> list[str]:
+    """Best-effort list of non-loopback IPv4 addresses for mobile bridge access."""
+    try:
+        return [
+            line.split()[1]
+            for line in subprocess.check_output(
+                ["hostname", "-I"], text=True, stderr=subprocess.DEVNULL
+            ).split()
+            if line.strip() and not line.startswith("127.")
+        ]
+    except Exception:
+        return []
+
 
 
 def _cors(handler: BaseHTTPRequestHandler) -> None:
