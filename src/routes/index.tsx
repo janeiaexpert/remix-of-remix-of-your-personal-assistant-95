@@ -32,6 +32,13 @@ function loadMemories(): string[] {
 function normalize(s: string) {
   return s.toLowerCase().replace(/\s+/g, " ").trim();
 }
+function isMobileDevice() {
+  if (typeof navigator === "undefined") return false;
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+}
+function isLoopback(url: string) {
+  return /^(https?:\/\/)?(127\.0\.0\.1|localhost)(:\d+)?\/?$/i.test(url.trim());
+}
 function mergeMemories(existing: string[], incoming: string[]): string[] {
   const seen = new Set(existing.map(normalize));
   const merged = [...existing];
