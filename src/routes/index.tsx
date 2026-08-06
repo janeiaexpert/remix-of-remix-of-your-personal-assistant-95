@@ -95,6 +95,7 @@ function Jarvis() {
 
   // Hydrate from localStorage
   useEffect(() => {
+    setIsMobile(isMobileDevice());
     setMessages(loadMessages());
     setMemories(loadMemories());
     const b = loadBridge();
