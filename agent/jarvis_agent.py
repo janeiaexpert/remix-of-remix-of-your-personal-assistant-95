@@ -232,6 +232,53 @@ class Handler(BaseHTTPRequestHandler):
                 },
             )
 
+    def _python3(self, body: dict) -> None:
+        code = body.get("code")
+        if not code or not isinstance(code, str):
+            return _json(self, 400, {"error": "code required"})
+        cwd = body.get("cwd") or str(BASE_CWD)
+        timeout = min(int(body.get("timeout") or 30), 300)
+        # Find python3 or python binary
+        exe = shutil.which("python3") or shutil.which("python")
+        if not exe:
+            return _json(self, 500, {"error": "python3 not found on this machine"})
+        args = body.get("args") or []
+        if not isinstance(args, list) or not all(isinstance(a, str) for a in args):
+            return _json(self, 400, {"error": "args must be a list of strings"})
+        argv = ["-c", code] + args
+        try:
+            proc = subprocess.run(
+                [exe, *argv],
+                shell=False,
+                cwd=cwd,
+                capture_output=True,
+                text=True,
+                timeout=timeout,
+            )
+            return _json(
+                self,
+                200,
+                {
+                    "exit": proc.returncode,
+                    "stdout": proc.stdout[-64_000:],
+                    "stderr": proc.stderr[-16_000:],
+                    "cwd": cwd,
+                    "executable": exe,
+                },
+            )
+        except subprocess.TimeoutExpired as exc:
+            return _json(
+                self,
+                200,
+                {
+                    "exit": -1,
+                    "stdout": (exc.stdout or "")[-64_000:] if isinstance(exc.stdout, str) else "",
+                    "stderr": f"timeout after {timeout}s",
+                    "cwd": cwd,
+                    "executable": exe,
+                },
+            )
+
     def _read(self, body: dict) -> None:
         path = body.get("path")
         if not path:
