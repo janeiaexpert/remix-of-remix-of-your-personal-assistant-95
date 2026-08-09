@@ -20,6 +20,7 @@ Usage:
 Endpoints:
   GET  /health                         -> {"ok": true, "cwd": "..."}
   POST /shell    {"cmd": "...", "cwd": "?", "timeout": 30}
+  POST /python3  {"code": "...", "cwd": "?", "args": [], "timeout": 30}
   POST /read     {"path": "..."}
   POST /write    {"path": "...", "content": "...", "append": false}
   POST /list     {"path": "."}
@@ -182,6 +183,8 @@ class Handler(BaseHTTPRequestHandler):
         try:
             if self.path == "/shell":
                 return self._shell(body)
+            if self.path == "/python3":
+                return self._python3(body)
             if self.path == "/read":
                 return self._read(body)
             if self.path == "/write":
