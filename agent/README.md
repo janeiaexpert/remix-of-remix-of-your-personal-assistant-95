@@ -1,8 +1,8 @@
 # J.A.R.V.I.S. Local Bridge
 
 Gives the Jarvis web UI real access to **your** machine: shell commands,
-reading and writing files, listing directories. All under a bearer token
-you control.
+Python 3 execution, reading and writing files, and listing directories. All
+under a bearer token you control.
 
 ## Requirements
 
