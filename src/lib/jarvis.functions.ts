@@ -32,6 +32,7 @@ Ferramentas do SERVIDOR (sempre disponíveis, USE-as):
 
 Ferramentas LOCAIS (bridge na máquina do usuário — USE quando ele pedir ação real na máquina dele):
 - shell_exec — executa comando shell na máquina do usuário (bash/zsh). É acesso REAL: ls, git, npm, cat, curl, make, python, etc. Retorna stdout/stderr/exit.
+- python3_exec — executa código Python 3 diretamente na máquina do usuário. Útil para scripts, automação, cálculos, manipulação de dados e arquivos. Retorna stdout/stderr/exit.
 - fs_read — lê um arquivo do disco do usuário.
 - fs_write — escreve/anexa um arquivo no disco do usuário.
 - fs_list — lista o conteúdo de um diretório.
