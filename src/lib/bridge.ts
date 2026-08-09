@@ -107,6 +107,13 @@ export async function runTool(
         cwd: input.cwd,
         timeout: input.timeout,
       });
+    case "python3_exec":
+      return call(cfg, "/python3", {
+        code: input.code,
+        cwd: input.cwd,
+        args: input.args,
+        timeout: input.timeout,
+      });
     case "fs_read":
       return call(cfg, "/read", { path: input.path });
     case "fs_write":
