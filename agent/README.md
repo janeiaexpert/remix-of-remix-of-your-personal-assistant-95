@@ -1,8 +1,8 @@
 # J.A.R.V.I.S. Local Bridge
 
 Gives the Jarvis web UI real access to **your** machine: shell commands,
-reading and writing files, listing directories. All under a bearer token
-you control.
+Python 3 execution, reading and writing files, and listing directories. All
+under a bearer token you control.
 
 ## Requirements
 
@@ -42,8 +42,28 @@ You'll see something like:
    - "rode `git status` no repositório X"
    - "leia o arquivo ~/notas.md e me resuma"
    - "crie um arquivo hello.txt com 'olá mundo'"
+   - "rode um script Python 3 que liste os arquivos da pasta atual"
 
-## Configuration
+## Python 3 support
+
+The agent exposes a dedicated `POST /python3` endpoint. Jarvis can run Python 3 code directly on your machine — useful for scripts, data processing, automation, or anything that fits better as Python than as shell.
+
+The endpoint accepts:
+
+```json
+{
+  "code": "import os; print(os.listdir('.'))",
+  "cwd": "/optional/working/dir",
+  "args": ["arg1", "arg2"],
+  "timeout": 30
+}
+```
+
+Response mirrors `shell_exec`: `{exit, stdout, stderr, cwd, executable}`.
+
+Requirements:
+- `python3` (or `python`) must be installed and available on your PATH.
+- Like `shell_exec`, this runs code with your user permissions. Be careful with destructive operations.
 
 | Env var        | Default                      | Purpose                                  |
 | -------------- | ---------------------------- | ---------------------------------------- |

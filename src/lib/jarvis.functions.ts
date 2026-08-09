@@ -32,6 +32,7 @@ Ferramentas do SERVIDOR (sempre disponíveis, USE-as):
 
 Ferramentas LOCAIS (bridge na máquina do usuário — USE quando ele pedir ação real na máquina dele):
 - shell_exec — executa comando shell na máquina do usuário (bash/zsh). É acesso REAL: ls, git, npm, cat, curl, make, python, etc. Retorna stdout/stderr/exit.
+- python3_exec — executa código Python 3 diretamente na máquina do usuário. Útil para scripts, automação, cálculos, manipulação de dados e arquivos. Retorna stdout/stderr/exit.
 - fs_read — lê um arquivo do disco do usuário.
 - fs_write — escreve/anexa um arquivo no disco do usuário.
 - fs_list — lista o conteúdo de um diretório.
@@ -46,7 +47,7 @@ Regras gerais:
 - Nunca chute datas, cotações, ou o conteúdo de arquivos — chame a ferramenta.
 - Depois de qualquer ferramenta, sintetize em 1-3 frases.`;
 
-const CLIENT_TOOL_NAMES = new Set(["shell_exec", "fs_read", "fs_write", "fs_list"]);
+const CLIENT_TOOL_NAMES = new Set(["shell_exec", "python3_exec", "fs_read", "fs_write", "fs_list"]);
 
 function buildSystem(memories: string[], hasBridge: boolean): string {
   const now = new Date();
@@ -226,6 +227,15 @@ export const askJarvis = createServerFn({ method: "POST" })
         append: z.boolean().optional(),
       }),
     });
+    const python3_exec = tool({
+      description: "Executa código Python 3 na máquina do usuário via bridge local. Retorna {exit, stdout, stderr, cwd, executable}. Útil para scripts, automação, cálculos e manipulação de arquivos. Peça confirmação antes de operações destrutivas.",
+      inputSchema: z.object({
+        code: z.string().describe("Código Python 3 completo a ser executado."),
+        cwd: z.string().optional().describe("Diretório de trabalho absoluto."),
+        args: z.array(z.string()).optional().describe("Argumentos de linha de comando para sys.argv."),
+        timeout: z.number().optional().describe("Timeout em segundos (default 30, máx 300)."),
+      }),
+    });
     const fs_list = tool({
       description: "Lista o conteúdo de um diretório na máquina do usuário.",
       inputSchema: z.object({ path: z.string() }),
@@ -237,7 +247,7 @@ export const askJarvis = createServerFn({ method: "POST" })
         system: buildSystem(data.memories, data.hasBridge),
         messages: data.messages as ModelMessage[],
         tools: data.hasBridge
-          ? { web_search, get_datetime, fetch_url, run_js, shell_exec, fs_read, fs_write, fs_list }
+          ? { web_search, get_datetime, fetch_url, run_js, shell_exec, python3_exec, fs_read, fs_write, fs_list }
           : { web_search, get_datetime, fetch_url, run_js },
         stopWhen: stepCountIs(12),
       });
