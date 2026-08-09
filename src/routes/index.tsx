@@ -5,7 +5,7 @@ import ReactMarkdown from "react-markdown";
 import { Mic, MicOff, Send, Volume2, VolumeX, Trash2, Brain, X, Plus, Plug, PlugZap, QrCode } from "lucide-react";
 import { askJarvis, extractMemories } from "@/lib/jarvis.functions";
 import { useSpeech, speak, cancelSpeech, primeAudio } from "@/lib/speech";
-import { loadBridge, saveBridge, loadBridgeDraft, saveBridgeDraft, health, runTool, pairingUrl, readPairingFromHash, type BridgeConfig } from "@/lib/bridge";
+import { loadBridge, saveBridge, loadBridgeDraft, saveBridgeDraft, health, runTool, pairingUrl, readPairingFromHash, mixedContentBlocked, type BridgeConfig } from "@/lib/bridge";
 import QRCode from "qrcode";
 import { cn } from "@/lib/utils";
 
@@ -85,6 +85,8 @@ function Jarvis() {
   const [bridgeUrl, setBridgeUrl] = useState("http://127.0.0.1:7842");
   const [bridgeToken, setBridgeToken] = useState("");
   const [bridgeError, setBridgeError] = useState<string | null>(null);
+  const [bridgeTesting, setBridgeTesting] = useState(false);
+
   const [isMobile, setIsMobile] = useState(false);
   const [toolLog, setToolLog] = useState<string[]>([]);
   const [qrImage, setQrImage] = useState<string | null>(null);
@@ -163,14 +165,18 @@ function Jarvis() {
     const cfg = { url: bridgeUrl.trim().replace(/\/$/, ""), token: bridgeToken.trim() };
     if (!cfg.url || !cfg.token) { setBridgeError("URL e token obrigatórios"); return; }
     setBridgeError(null);
+    setBridgeTesting(true);
     try {
       await health(cfg);
       setBridge(cfg); bridgeRef.current = cfg; saveBridge(cfg); setBridgeStatus("online");
     } catch (e) {
       setBridgeStatus("error");
       setBridgeError(e instanceof Error ? e.message : "Falha ao conectar");
+    } finally {
+      setBridgeTesting(false);
     }
   }, [bridgeUrl, bridgeToken]);
+
 
   const disconnectBridge = useCallback(() => {
     setBridge(null); bridgeRef.current = null; saveBridge(null); setBridgeStatus("offline");
@@ -407,6 +413,14 @@ function Jarvis() {
                 Rode <code className="text-hud">python3 agent/jarvis_agent.py</code> na sua máquina, cole a URL e o token abaixo, e o Jarvis passa a executar shell/arquivos aí.
               </p>
             )}
+            {hydrated && mixedContentBlocked(bridgeUrl.trim()) && (
+              <p className="mb-3 rounded border border-gold/40 bg-gold/10 p-2 font-mono text-[10px] leading-relaxed text-gold">
+                ⚠ O navegador bloqueia chamadas HTTP de rede local a partir desta página HTTPS. Soluções: exponha o agente por um túnel HTTPS
+                (<code>cloudflared tunnel --url http://localhost:7842</code> ou <code>ngrok http 7842</code>) e cole aqui a URL <code>https://…</code>,
+                ou acesse o app pelo mesmo computador usando <code>http://127.0.0.1:7842</code>.
+              </p>
+            )}
+
             <div className="mb-2 flex gap-2">
               <input
                 value={bridgeUrl}
@@ -424,16 +438,24 @@ function Jarvis() {
               />
             </div>
             {bridgeError && (
-              <p className="mb-2 font-mono text-[10px] text-gold">{bridgeError}</p>
+              <p className="mb-2 whitespace-pre-line font-mono text-[10px] leading-relaxed text-gold">{bridgeError}</p>
             )}
-            <div className="flex gap-2">
+            {bridgeTesting && (
+              <p className="mb-2 font-mono text-[10px] text-hud/80">Testando conexão com {bridgeUrl.trim()}…</p>
+            )}
+            {bridgeStatus === "online" && !bridgeError && !bridgeTesting && (
+              <p className="mb-2 font-mono text-[10px] text-hud">✓ Conectado — Jarvis já pode usar shell e arquivos.</p>
+            )}
+            <div className="flex flex-wrap gap-2">
               <button
                 type="button"
                 onClick={() => void testBridge()}
-                className="rounded border border-hud/40 bg-hud/10 px-3 py-1.5 font-mono text-xs text-hud hover:bg-hud/20"
+                disabled={bridgeTesting}
+                className="rounded border border-hud/40 bg-hud/10 px-3 py-1.5 font-mono text-xs text-hud hover:bg-hud/20 disabled:opacity-40"
               >
-                Testar / conectar
+                {bridgeTesting ? "Testando…" : "Testar / conectar"}
               </button>
+
               <button
                 type="button"
                 onClick={() => setQrOpen((o) => !o)}

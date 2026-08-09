@@ -33,15 +33,46 @@ export function saveBridge(cfg: BridgeConfig | null): void {
   );
 }
 
-async function call(cfg: BridgeConfig, path: string, body?: unknown): Promise<unknown> {
-  const res = await fetch(`${cfg.url}${path}`, {
-    method: body === undefined ? "GET" : "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${cfg.token}`,
-    },
-    body: body === undefined ? undefined : JSON.stringify(body),
-  });
+export function mixedContentBlocked(url: string): boolean {
+  if (typeof window === "undefined") return false;
+  if (window.location.protocol !== "https:") return false;
+  if (!/^http:\/\//i.test(url)) return false;
+  const host = url.replace(/^http:\/\//i, "").split(/[:/]/)[0] ?? "";
+  // localhost/127.0.0.1 são "potentially trustworthy" e continuam permitidos
+  return !(host === "localhost" || host === "127.0.0.1" || host === "[::1]" || host.endsWith(".localhost"));
+}
+
+async function call(cfg: BridgeConfig, path: string, body?: unknown, timeoutMs = 8000): Promise<unknown> {
+  if (mixedContentBlocked(cfg.url)) {
+    throw new Error(
+      "Bloqueado pelo navegador (conteúdo misto): esta página é HTTPS e o endereço da bridge é HTTP em rede local. Use um túnel HTTPS (ex: ngrok/cloudflared) apontando para o agente, ou abra o app em HTTP.",
+    );
+  }
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+  let res: Response;
+  try {
+    res = await fetch(`${cfg.url}${path}`, {
+      method: body === undefined ? "GET" : "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${cfg.token}`,
+      },
+      body: body === undefined ? undefined : JSON.stringify(body),
+      signal: ctrl.signal,
+    });
+  } catch (e) {
+    if (e instanceof DOMException && e.name === "AbortError") {
+      throw new Error(
+        `Sem resposta em ${timeoutMs / 1000}s de ${cfg.url}. Verifique se o agente está rodando e se o endereço/porta estão corretos (mesma rede).`,
+      );
+    }
+    throw new Error(
+      `Não foi possível alcançar ${cfg.url}. Agente rodando? Se estiver em outro dispositivo, use JARVIS_HOST=0.0.0.0 e o IP local. (${e instanceof Error ? e.message : String(e)})`,
+    );
+  } finally {
+    clearTimeout(timer);
+  }
   const text = await res.text();
   let data: unknown;
   try {
@@ -50,11 +81,15 @@ async function call(cfg: BridgeConfig, path: string, body?: unknown): Promise<un
     data = { error: `Invalid response: ${text.slice(0, 200)}` };
   }
   if (!res.ok) {
-    const errMsg = (data as { error?: string })?.error ?? `HTTP ${res.status}`;
+    const errMsg =
+      res.status === 401
+        ? "Token inválido — copie exatamente o token impresso no terminal do agente."
+        : ((data as { error?: string })?.error ?? `HTTP ${res.status}`);
     throw new Error(errMsg);
   }
   return data;
 }
+
 
 export async function health(cfg: BridgeConfig): Promise<{ ok: boolean; cwd: string; platform: string }> {
   return (await call(cfg, "/health")) as { ok: boolean; cwd: string; platform: string };
