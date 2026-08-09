@@ -430,16 +430,24 @@ function Jarvis() {
               />
             </div>
             {bridgeError && (
-              <p className="mb-2 font-mono text-[10px] text-gold">{bridgeError}</p>
+              <p className="mb-2 whitespace-pre-line font-mono text-[10px] leading-relaxed text-gold">{bridgeError}</p>
             )}
-            <div className="flex gap-2">
+            {bridgeTesting && (
+              <p className="mb-2 font-mono text-[10px] text-hud/80">Testando conexão com {bridgeUrl.trim()}…</p>
+            )}
+            {bridgeStatus === "online" && !bridgeError && !bridgeTesting && (
+              <p className="mb-2 font-mono text-[10px] text-hud">✓ Conectado — Jarvis já pode usar shell e arquivos.</p>
+            )}
+            <div className="flex flex-wrap gap-2">
               <button
                 type="button"
                 onClick={() => void testBridge()}
-                className="rounded border border-hud/40 bg-hud/10 px-3 py-1.5 font-mono text-xs text-hud hover:bg-hud/20"
+                disabled={bridgeTesting}
+                className="rounded border border-hud/40 bg-hud/10 px-3 py-1.5 font-mono text-xs text-hud hover:bg-hud/20 disabled:opacity-40"
               >
-                Testar / conectar
+                {bridgeTesting ? "Testando…" : "Testar / conectar"}
               </button>
+
               <button
                 type="button"
                 onClick={() => setQrOpen((o) => !o)}
