@@ -413,6 +413,14 @@ function Jarvis() {
                 Rode <code className="text-hud">python3 agent/jarvis_agent.py</code> na sua máquina, cole a URL e o token abaixo, e o Jarvis passa a executar shell/arquivos aí.
               </p>
             )}
+            {hydrated && mixedContentBlocked(bridgeUrl.trim()) && (
+              <p className="mb-3 rounded border border-gold/40 bg-gold/10 p-2 font-mono text-[10px] leading-relaxed text-gold">
+                ⚠ O navegador bloqueia chamadas HTTP de rede local a partir desta página HTTPS. Soluções: exponha o agente por um túnel HTTPS
+                (<code>cloudflared tunnel --url http://localhost:7842</code> ou <code>ngrok http 7842</code>) e cole aqui a URL <code>https://…</code>,
+                ou acesse o app pelo mesmo computador usando <code>http://127.0.0.1:7842</code>.
+              </p>
+            )}
+
             <div className="mb-2 flex gap-2">
               <input
                 value={bridgeUrl}
