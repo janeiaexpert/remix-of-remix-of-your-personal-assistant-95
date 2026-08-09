@@ -45,16 +45,66 @@ MAX_READ = 512 * 1024  # 512 KB
 
 def _local_ips() -> list[str]:
     """Best-effort list of non-loopback IPv4 addresses for mobile bridge access."""
+    ips: list[str] = []
     try:
-        return [
-            line.split()[1]
-            for line in subprocess.check_output(
-                ["hostname", "-I"], text=True, stderr=subprocess.DEVNULL
-            ).split()
-            if line.strip() and not line.startswith("127.")
-        ]
+        out = subprocess.check_output(["hostname", "-I"], text=True, stderr=subprocess.DEVNULL)
+        ips = [ip for ip in out.split() if ip and not ip.startswith("127.")]
     except Exception:
-        return []
+        ips = []
+    if not ips:
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.connect(("8.8.8.8", 80))
+            ip = s.getsockname()[0]
+            s.close()
+            if ip and not ip.startswith("127."):
+                ips = [ip]
+        except Exception:
+            pass
+    return ips
+
+
+def _start_tunnel(port: int) -> str | None:
+    """Start a cloudflared quick tunnel so phones on HTTPS pages can reach us.
+
+    Returns the public https URL, or None if cloudflared isn't installed.
+    """
+    import re
+    import threading
+
+    exe = shutil.which("cloudflared")
+    if not exe:
+        print("  Tunnel    : cloudflared não encontrado.")
+        print("              Instale: brew install cloudflared  |  https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/")
+        return None
+
+    proc = subprocess.Popen(
+        [exe, "tunnel", "--url", f"http://127.0.0.1:{port}", "--no-autoupdate"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        bufsize=1,
+    )
+    url_holder: list[str] = []
+    pattern = re.compile(r"https://[a-z0-9-]+\.trycloudflare\.com")
+
+    def pump() -> None:
+        assert proc.stdout is not None
+        for line in proc.stdout:
+            m = pattern.search(line)
+            if m and not url_holder:
+                url_holder.append(m.group(0))
+
+    threading.Thread(target=pump, daemon=True).start()
+    for _ in range(300):  # up to ~30s
+        if url_holder:
+            return url_holder[0]
+        if proc.poll() is not None:
+            break
+        time.sleep(0.1)
+    print("  Tunnel    : falhou ao obter URL do cloudflared.")
+    return None
+
 
 
 
