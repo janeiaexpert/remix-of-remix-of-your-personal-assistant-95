@@ -163,14 +163,18 @@ function Jarvis() {
     const cfg = { url: bridgeUrl.trim().replace(/\/$/, ""), token: bridgeToken.trim() };
     if (!cfg.url || !cfg.token) { setBridgeError("URL e token obrigatórios"); return; }
     setBridgeError(null);
+    setBridgeTesting(true);
     try {
       await health(cfg);
       setBridge(cfg); bridgeRef.current = cfg; saveBridge(cfg); setBridgeStatus("online");
     } catch (e) {
       setBridgeStatus("error");
       setBridgeError(e instanceof Error ? e.message : "Falha ao conectar");
+    } finally {
+      setBridgeTesting(false);
     }
   }, [bridgeUrl, bridgeToken]);
+
 
   const disconnectBridge = useCallback(() => {
     setBridge(null); bridgeRef.current = null; saveBridge(null); setBridgeStatus("offline");
