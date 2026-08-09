@@ -247,7 +247,7 @@ export const askJarvis = createServerFn({ method: "POST" })
         system: buildSystem(data.memories, data.hasBridge),
         messages: data.messages as ModelMessage[],
         tools: data.hasBridge
-          ? { web_search, get_datetime, fetch_url, run_js, shell_exec, fs_read, fs_write, fs_list }
+          ? { web_search, get_datetime, fetch_url, run_js, shell_exec, python3_exec, fs_read, fs_write, fs_list }
           : { web_search, get_datetime, fetch_url, run_js },
         stopWhen: stepCountIs(12),
       });
