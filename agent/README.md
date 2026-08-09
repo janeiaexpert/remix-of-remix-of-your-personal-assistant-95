@@ -11,8 +11,14 @@ you control.
 ## Run
 
 ```bash
+# recommended: also opens a public HTTPS tunnel (works from phones)
+python3 agent/jarvis_agent.py --tunnel
+
+# local only
 python3 agent/jarvis_agent.py
 ```
+
+With `--tunnel` (requires [cloudflared](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/)) the terminal also prints an `https://….trycloudflare.com` URL. Paste that URL + token into the Jarvis UI on any device — laptop or phone — and the browser's HTTPS restrictions no longer apply.
 
 You'll see something like:
 
