@@ -47,7 +47,7 @@ Regras gerais:
 - Nunca chute datas, cotações, ou o conteúdo de arquivos — chame a ferramenta.
 - Depois de qualquer ferramenta, sintetize em 1-3 frases.`;
 
-const CLIENT_TOOL_NAMES = new Set(["shell_exec", "fs_read", "fs_write", "fs_list"]);
+const CLIENT_TOOL_NAMES = new Set(["shell_exec", "python3_exec", "fs_read", "fs_write", "fs_list"]);
 
 function buildSystem(memories: string[], hasBridge: boolean): string {
   const now = new Date();
@@ -225,6 +225,15 @@ export const askJarvis = createServerFn({ method: "POST" })
         path: z.string(),
         content: z.string(),
         append: z.boolean().optional(),
+      }),
+    });
+    const python3_exec = tool({
+      description: "Executa código Python 3 na máquina do usuário via bridge local. Retorna {exit, stdout, stderr, cwd, executable}. Útil para scripts, automação, cálculos e manipulação de arquivos. Peça confirmação antes de operações destrutivas.",
+      inputSchema: z.object({
+        code: z.string().describe("Código Python 3 completo a ser executado."),
+        cwd: z.string().optional().describe("Diretório de trabalho absoluto."),
+        args: z.array(z.string()).optional().describe("Argumentos de linha de comando para sys.argv."),
+        timeout: z.number().optional().describe("Timeout em segundos (default 30, máx 300)."),
       }),
     });
     const fs_list = tool({
