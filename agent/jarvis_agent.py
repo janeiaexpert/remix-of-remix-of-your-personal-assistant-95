@@ -29,9 +29,11 @@ from __future__ import annotations
 import json
 import os
 import secrets
+import shutil
 import socket
 import subprocess
 import sys
+import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
@@ -40,6 +42,7 @@ HOST = os.environ.get("JARVIS_HOST", "127.0.0.1")
 PORT = int(os.environ.get("JARVIS_PORT", "7842"))
 TOKEN = os.environ.get("JARVIS_TOKEN") or secrets.token_urlsafe(24)
 BASE_CWD = Path(os.environ.get("JARVIS_CWD", os.getcwd())).expanduser().resolve()
+TUNNEL = os.environ.get("JARVIS_TUNNEL", "").lower() in ("1", "true", "yes") or "--tunnel" in sys.argv
 MAX_READ = 512 * 1024  # 512 KB
 
 
@@ -299,6 +302,12 @@ def main() -> None:
         print("  WARNING   : exposed to your local network — keep token secret.")
     else:
         print("  Scope     : localhost only (use JARVIS_HOST=0.0.0.0 for mobile)")
+    if TUNNEL:
+        public = _start_tunnel(PORT)
+        if public:
+            print("-" * 60)
+            print(f"  HTTPS URL : {public}")
+            print("              ^ use esta URL no celular (funciona em páginas HTTPS)")
     print("=" * 60)
     print("  Paste the URL and token into the Jarvis web UI (Bridge panel).")
     print("  Ctrl+C to stop.")
