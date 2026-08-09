@@ -390,36 +390,42 @@ function Jarvis() {
                 <X size={14} />
               </button>
             </div>
+            <p className="mb-3 font-mono text-[10px] leading-relaxed text-muted-foreground">
+              Modo recomendado (notebook <em>e</em> celular, funciona em HTTPS):
+            </p>
+            <pre className="mb-3 overflow-x-auto rounded border border-hud/20 bg-black/50 p-2 font-mono text-[10px] text-hud/90">
+              python3 agent/jarvis_agent.py --tunnel
+            </pre>
+            <p className="mb-3 font-mono text-[10px] leading-relaxed text-muted-foreground">
+              O terminal imprime uma <strong>HTTPS URL</strong> (<code className="text-hud">https://…trycloudflare.com</code>) e o token.
+              Cole os dois abaixo — no notebook e, via QR, no celular.
+            </p>
             {isMobile ? (
               <>
                 <p className="mb-3 font-mono text-[10px] leading-relaxed text-muted-foreground">
-                  <span className="text-gold">Aviso móvel:</span> o navegador do celular não acessa o localhost da sua estação de trabalho.
-                  Para usar a bridge a partir deste dispositivo, rode o agente com acesso à rede local:
-                </p>
-                <pre className="mb-3 overflow-x-auto rounded border border-hud/20 bg-black/50 p-2 font-mono text-[10px] text-hud/90">
-                  JARVIS_HOST=0.0.0.0 python3 agent/jarvis_agent.py
-                </pre>
-                <p className="mb-3 font-mono text-[10px] leading-relaxed text-muted-foreground">
-                  Cole abaixo o <strong>endereço IP local</strong> do seu computador (ex: <code className="text-hud">http://192.168.1.50:7842</code>), não 127.0.0.1.
+                  Alternativa na mesma Wi-Fi (sem túnel): rode{" "}
+                  <code className="text-hud">JARVIS_HOST=0.0.0.0 python3 agent/jarvis_agent.py</code> e use o{" "}
+                  <strong>IP local</strong> do computador (ex: <code className="text-hud">http://192.168.1.50:7842</code>).
                 </p>
                 {isLoopback(bridgeUrl) && (
                   <p className="mb-3 font-mono text-[10px] text-gold">
-                    ⚠ O campo URL está como localhost. Troque pelo IP local do computador onde o agente está rodando.
+                    ⚠ O campo URL está como localhost. Troque pela HTTPS URL do túnel ou pelo IP local do computador.
                   </p>
                 )}
               </>
             ) : (
               <p className="mb-3 font-mono text-[10px] leading-relaxed text-muted-foreground">
-                Rode <code className="text-hud">python3 agent/jarvis_agent.py</code> na sua máquina, cole a URL e o token abaixo, e o Jarvis passa a executar shell/arquivos aí.
+                Sem túnel, no próprio computador: <code className="text-hud">python3 agent/jarvis_agent.py</code> e{" "}
+                <code className="text-hud">http://127.0.0.1:7842</code>.
               </p>
             )}
             {hydrated && mixedContentBlocked(bridgeUrl.trim()) && (
               <p className="mb-3 rounded border border-gold/40 bg-gold/10 p-2 font-mono text-[10px] leading-relaxed text-gold">
-                ⚠ O navegador bloqueia chamadas HTTP de rede local a partir desta página HTTPS. Soluções: exponha o agente por um túnel HTTPS
-                (<code>cloudflared tunnel --url http://localhost:7842</code> ou <code>ngrok http 7842</code>) e cole aqui a URL <code>https://…</code>,
-                ou acesse o app pelo mesmo computador usando <code>http://127.0.0.1:7842</code>.
+                ⚠ O navegador bloqueia chamadas HTTP de rede local a partir desta página HTTPS. Rode o agente com{" "}
+                <code>--tunnel</code> e cole aqui a URL <code>https://…</code>.
               </p>
             )}
+
 
             <div className="mb-2 flex gap-2">
               <input
