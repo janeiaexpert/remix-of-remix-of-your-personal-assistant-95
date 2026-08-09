@@ -326,19 +326,20 @@ function Jarvis() {
 
       <div className="relative mx-auto flex min-h-screen max-w-5xl flex-col px-4 py-6 sm:px-6 sm:py-8">
         {/* Header */}
-        <header className="flex items-center justify-between gap-4 border-b border-hud/20 pb-4">
-          <div className="flex items-center gap-3">
+        <header className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-hud/20 pb-4 sm:flex sm:justify-between sm:gap-4">
+          <div className="flex min-w-0 items-center gap-3">
             <ReactorBadge active={reactorActive} />
-            <div>
-              <h1 className="text-lg font-bold tracking-[0.35em] text-hud text-glow sm:text-xl">
+            <div className="min-w-0">
+              <h1 className="truncate text-base font-bold tracking-[0.25em] text-hud text-glow sm:text-xl sm:tracking-[0.35em]">
                 J.A.R.V.I.S.
               </h1>
-              <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+              <p className="truncate font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
                 Just A Rather Very Intelligent System
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+
             <div className={cn("hidden font-mono text-xs tracking-widest sm:block", status.color)}>
               ● {status.label}
             </div>

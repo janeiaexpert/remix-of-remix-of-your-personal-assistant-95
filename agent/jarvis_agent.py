@@ -26,11 +26,15 @@ Endpoints:
 """
 from __future__ import annotations
 
+import json
+import os
+import secrets
 import socket
 import subprocess
 import sys
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+
 
 HOST = os.environ.get("JARVIS_HOST", "127.0.0.1")
 PORT = int(os.environ.get("JARVIS_PORT", "7842"))
