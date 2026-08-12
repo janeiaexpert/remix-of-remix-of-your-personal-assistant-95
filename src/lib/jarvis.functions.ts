@@ -263,14 +263,17 @@ export const askJarvis = createServerFn({ method: "POST" })
       };
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      if (msg.includes("429")) {
-        return { text: "Perdão, senhor — circuitos sobrecarregados. Tente novamente em instantes.", responseMessagesJson: "[]", pending: [] as { id: string; name: string; inputJson: string }[] };
+      const status = (err as { statusCode?: number } | null)?.statusCode;
+      const empty = { responseMessagesJson: "[]", pending: [] as { id: string; name: string; inputJson: string }[] };
+      if (status === 429 || msg.includes("429") || /rate limit/i.test(msg)) {
+        return { text: "Perdão, senhor — circuitos sobrecarregados. Tente novamente em instantes.", ...empty };
       }
-      if (msg.includes("402")) {
-        return { text: "Créditos esgotados, senhor. Recarregue no painel do Lovable.", responseMessagesJson: "[]", pending: [] as { id: string; name: string; inputJson: string }[] };
+      if (status === 402 || msg.includes("402") || /payment required|insufficient credit/i.test(msg)) {
+        return { text: "Créditos de IA esgotados, senhor. Adicione créditos no painel do Lovable (Settings → Workspace → Usage) para me reativar.", ...empty };
       }
       throw err;
     }
+
   });
 
 // ---------------------------------------------------------------------------
