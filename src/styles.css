@@ -93,6 +93,13 @@
     height: 100%;
   }
 
+  /* Fundo rígido escuro: a página nunca fica branca, mesmo se alguma
+     variável falhar ou o tema não carregar por completo. */
+  html {
+    background-color: #0a0f1e;
+    color-scheme: dark;
+  }
+
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
@@ -159,3 +166,302 @@
 .jarvis-spin-reverse { animation: jarvis-spin-reverse 14s linear infinite; }
 .jarvis-listening { animation: jarvis-listening 0.9s ease-in-out infinite; }
 .jarvis-scan { animation: jarvis-scan 4s linear infinite; }
+
+/* Hologram motion pack (Iron-Man style) */
+@keyframes jarvis-orbit {
+  from { transform: rotate(0deg) translateX(var(--orbit-r, 96px)) rotate(0deg); }
+  to { transform: rotate(360deg) translateX(var(--orbit-r, 96px)) rotate(-360deg); }
+}
+@keyframes jarvis-sweep {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+@keyframes jarvis-ping {
+  0% { transform: scale(0.55); opacity: 0.8; }
+  100% { transform: scale(1.25); opacity: 0; }
+}
+@keyframes jarvis-flicker {
+  0%, 100% { opacity: 1; }
+  92% { opacity: 1; }
+  93% { opacity: 0.55; }
+  94% { opacity: 1; }
+  97% { opacity: 0.7; }
+  98% { opacity: 1; }
+}
+@keyframes jarvis-rise {
+  0% { transform: translateY(0) scale(1); opacity: 0; }
+  15% { opacity: 0.9; }
+  100% { transform: translateY(-70px) scale(0.4); opacity: 0; }
+}
+.jarvis-orbit {
+  --orbit-r: 100px;
+  animation: jarvis-orbit 9s linear infinite;
+}
+.jarvis-orbit-sm {
+  --orbit-r: 72px;
+  animation: jarvis-orbit 6s linear infinite reverse;
+}
+.jarvis-sweep { animation: jarvis-sweep 5s linear infinite; }
+.jarvis-ping { animation: jarvis-ping 2.2s ease-out infinite; }
+.jarvis-flicker { animation: jarvis-flicker 7s linear infinite; }
+.jarvis-rise { animation: jarvis-rise 3.6s ease-in infinite; }
+
+/* ============ Capa cinematografica (holograma) ============ */
+@keyframes cover-drift {
+  0%, 100% { transform: scale(1.02) translateX(0); }
+  50% { transform: scale(1.08) translateX(-1.5%); }
+}
+@keyframes cover-breathe {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+@keyframes cover-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@keyframes cover-spin-rev { from { transform: rotate(360deg); } to { transform: rotate(0deg); } }
+@keyframes cover-scan {
+  0% { transform: translateY(-100%); opacity: 0; }
+  12%, 88% { opacity: 1; }
+  100% { transform: translateY(1100%); opacity: 0; }
+}
+@keyframes cover-flicker {
+  0%, 100% { opacity: 1; }
+  90% { opacity: 1; }
+  91% { opacity: 0.5; }
+  92% { opacity: 1; }
+  96% { opacity: 0.7; }
+  97% { opacity: 1; }
+}
+@keyframes cover-title {
+  0%, 100% { text-shadow: 0 0 18px oklch(0.78 0.16 220 / 0.5); }
+  50% { text-shadow: 0 0 42px oklch(0.85 0.18 220 / 0.9); }
+}
+.cover-drift { animation: cover-drift 24s ease-in-out infinite; }
+.cover-breathe { animation: cover-breathe 5s ease-in-out infinite; }
+.cover-spin { animation: cover-spin 38s linear infinite; }
+.cover-spin-rev { animation: cover-spin-rev 26s linear infinite; }
+.cover-scan { animation: cover-scan 6s linear infinite; }
+.cover-flicker { animation: cover-flicker 4.5s ease-in-out infinite; }
+.cover-title { animation: cover-title 3.6s ease-in-out infinite; }
+.cover-scanlines {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    oklch(0.88 0.01 250 / 0.06) 0px,
+    oklch(0.88 0.01 250 / 0.06) 1px,
+    transparent 1px,
+    transparent 4px
+  );
+}
+
+/* ============ Sistemas de cor: azul (padrao) e vermelho ============ */
+.theme-red {
+  --background: oklch(0.14 0.005 250);
+  --foreground: oklch(0.95 0.01 250);
+  --card: oklch(0.18 0.006 250);
+  --card-foreground: oklch(0.95 0.01 250);
+  --popover: oklch(0.18 0.006 250);
+  --popover-foreground: oklch(0.95 0.01 250);
+  --primary: oklch(0.66 0.20 28);
+  --primary-foreground: oklch(0.14 0.01 250);
+  --secondary: oklch(0.24 0.008 250);
+  --secondary-foreground: oklch(0.95 0.01 250);
+  --muted: oklch(0.22 0.006 250);
+  --muted-foreground: oklch(0.72 0.01 250);
+  --accent: oklch(0.26 0.01 250);
+  --accent-foreground: oklch(0.96 0.01 250);
+  --border: oklch(0.55 0.02 250 / 0.28);
+  --input: oklch(0.24 0.008 250);
+  --ring: oklch(0.66 0.20 28);
+  --hud: oklch(0.66 0.20 28);
+  --hud-glow: oklch(0.74 0.22 28);
+  --gold: oklch(0.85 0.15 85);
+}
+
+/* ============ Roxo fantasma (armadura furtiva) ============ */
+.theme-purple {
+  --background: oklch(0.15 0.03 305);
+  --foreground: oklch(0.95 0.02 305);
+  --card: oklch(0.19 0.035 305);
+  --card-foreground: oklch(0.95 0.02 305);
+  --popover: oklch(0.19 0.035 305);
+  --popover-foreground: oklch(0.95 0.02 305);
+  --primary: oklch(0.72 0.20 300);
+  --primary-foreground: oklch(0.14 0.02 300);
+  --secondary: oklch(0.25 0.04 305);
+  --secondary-foreground: oklch(0.95 0.02 305);
+  --muted: oklch(0.23 0.03 305);
+  --muted-foreground: oklch(0.70 0.04 305);
+  --accent: oklch(0.29 0.06 300);
+  --accent-foreground: oklch(0.95 0.02 305);
+  --border: oklch(0.50 0.08 300 / 0.4);
+  --input: oklch(0.27 0.04 305);
+  --ring: oklch(0.72 0.20 300);
+  --hud: oklch(0.72 0.20 300);
+  --hud-glow: oklch(0.80 0.22 300);
+  --gold: oklch(0.82 0.14 85);
+  --shadow-hud: 0 0 24px oklch(0.72 0.20 300 / 0.35), 0 0 60px oklch(0.72 0.20 300 / 0.15);
+  --shadow-hud-strong: 0 0 40px oklch(0.75 0.22 300 / 0.55), 0 0 100px oklch(0.75 0.22 300 / 0.25);
+  background-image:
+    radial-gradient(ellipse at top, oklch(0.30 0.08 300 / 0.35), transparent 60%),
+    radial-gradient(ellipse at bottom, oklch(0.25 0.06 320 / 0.25), transparent 60%);
+}
+.theme-purple .text-glow {
+  text-shadow: 0 0 8px oklch(0.85 0.20 300 / 0.6), 0 0 24px oklch(0.85 0.20 300 / 0.3);
+}
+
+/* ============ Amarelo solar (traje Midas) ============ */
+.theme-yellow {
+  --background: oklch(0.15 0.02 100);
+  --foreground: oklch(0.96 0.02 100);
+  --card: oklch(0.20 0.025 100);
+  --card-foreground: oklch(0.96 0.02 100);
+  --popover: oklch(0.20 0.025 100);
+  --popover-foreground: oklch(0.96 0.02 100);
+  --primary: oklch(0.85 0.16 100);
+  --primary-foreground: oklch(0.16 0.02 100);
+  --secondary: oklch(0.26 0.03 100);
+  --secondary-foreground: oklch(0.96 0.02 100);
+  --muted: oklch(0.24 0.025 100);
+  --muted-foreground: oklch(0.72 0.03 100);
+  --accent: oklch(0.30 0.05 95);
+  --accent-foreground: oklch(0.96 0.02 100);
+  --border: oklch(0.60 0.08 100 / 0.4);
+  --input: oklch(0.28 0.03 100);
+  --ring: oklch(0.85 0.16 100);
+  --hud: oklch(0.85 0.16 100);
+  --hud-glow: oklch(0.90 0.18 100);
+  --gold: oklch(0.75 0.18 50);
+  --shadow-hud: 0 0 24px oklch(0.85 0.16 100 / 0.35), 0 0 60px oklch(0.85 0.16 100 / 0.15);
+  --shadow-hud-strong: 0 0 40px oklch(0.88 0.18 100 / 0.55), 0 0 100px oklch(0.88 0.18 100 / 0.25);
+  background-image:
+    radial-gradient(ellipse at top, oklch(0.28 0.07 100 / 0.35), transparent 60%),
+    radial-gradient(ellipse at bottom, oklch(0.24 0.05 80 / 0.25), transparent 60%);
+}
+.theme-yellow .text-glow {
+  text-shadow: 0 0 8px oklch(0.90 0.18 100 / 0.6), 0 0 24px oklch(0.90 0.18 100 / 0.3);
+}
+
+/* ============ Preto e branco (traje furtivo) ============ */
+.theme-bw {
+  --background: oklch(0.12 0 0);
+  --foreground: oklch(0.96 0 0);
+  --card: oklch(0.17 0 0);
+  --card-foreground: oklch(0.96 0 0);
+  --popover: oklch(0.17 0 0);
+  --popover-foreground: oklch(0.96 0 0);
+  --primary: oklch(0.85 0 0);
+  --primary-foreground: oklch(0.12 0 0);
+  --secondary: oklch(0.22 0 0);
+  --secondary-foreground: oklch(0.96 0 0);
+  --muted: oklch(0.20 0 0);
+  --muted-foreground: oklch(0.68 0 0);
+  --accent: oklch(0.28 0 0);
+  --accent-foreground: oklch(0.96 0 0);
+  --border: oklch(0.45 0 0 / 0.4);
+  --input: oklch(0.22 0 0);
+  --ring: oklch(0.85 0 0);
+  --hud: oklch(0.85 0 0);
+  --hud-glow: oklch(0.95 0 0);
+  --gold: oklch(0.65 0 0);
+  --shadow-hud: 0 0 24px oklch(0.85 0 0 / 0.25), 0 0 60px oklch(0.85 0 0 / 0.10);
+  --shadow-hud-strong: 0 0 40px oklch(0.90 0 0 / 0.4), 0 0 100px oklch(0.90 0 0 / 0.18);
+  background-image:
+    radial-gradient(ellipse at top, oklch(0.25 0 0 / 0.35), transparent 60%),
+    radial-gradient(ellipse at bottom, oklch(0.20 0 0 / 0.25), transparent 60%);
+}
+.theme-bw .text-glow {
+  text-shadow: 0 0 8px oklch(0.92 0 0 / 0.6), 0 0 24px oklch(0.92 0 0 / 0.3);
+}
+
+/* ============ Marrom deserto (traje de camuflagem) ============ */
+.theme-brown {
+  --background: oklch(0.15 0.025 70);
+  --foreground: oklch(0.94 0.02 75);
+  --card: oklch(0.20 0.03 70);
+  --card-foreground: oklch(0.94 0.02 75);
+  --popover: oklch(0.20 0.03 70);
+  --popover-foreground: oklch(0.94 0.02 75);
+  --primary: oklch(0.68 0.15 65);
+  --primary-foreground: oklch(0.15 0.02 70);
+  --secondary: oklch(0.25 0.035 70);
+  --secondary-foreground: oklch(0.94 0.02 75);
+  --muted: oklch(0.23 0.03 70);
+  --muted-foreground: oklch(0.70 0.03 75);
+  --accent: oklch(0.30 0.05 68);
+  --accent-foreground: oklch(0.94 0.02 75);
+  --border: oklch(0.50 0.06 70 / 0.4);
+  --input: oklch(0.27 0.035 70);
+  --ring: oklch(0.68 0.15 65);
+  --hud: oklch(0.68 0.15 65);
+  --hud-glow: oklch(0.78 0.17 70);
+  --gold: oklch(0.83 0.10 80);
+  --shadow-hud: 0 0 24px oklch(0.68 0.15 65 / 0.35), 0 0 60px oklch(0.68 0.15 65 / 0.15);
+  --shadow-hud-strong: 0 0 40px oklch(0.72 0.17 68 / 0.55), 0 0 100px oklch(0.72 0.17 68 / 0.25);
+  background-image:
+    radial-gradient(ellipse at top, oklch(0.28 0.06 70 / 0.35), transparent 60%),
+    radial-gradient(ellipse at bottom, oklch(0.23 0.05 60 / 0.25), transparent 60%);
+}
+.theme-brown .text-glow {
+  text-shadow: 0 0 8px oklch(0.82 0.16 70 / 0.6), 0 0 24px oklch(0.82 0.16 70 / 0.3);
+}
+
+/* ============ Chama (amarelo + vermelho, detalhes brancos — Mark clássica) ============ */
+.theme-flame {
+  --background: oklch(0.14 0.02 60);
+  --foreground: oklch(0.96 0.015 90);
+  --card: oklch(0.19 0.025 60);
+  --card-foreground: oklch(0.96 0.015 90);
+  --popover: oklch(0.19 0.025 60);
+  --popover-foreground: oklch(0.96 0.015 90);
+  --primary: oklch(0.68 0.20 40);
+  --primary-foreground: oklch(0.15 0.02 60);
+  --secondary: oklch(0.25 0.03 60);
+  --secondary-foreground: oklch(0.96 0.015 90);
+  --muted: oklch(0.23 0.025 60);
+  --muted-foreground: oklch(0.72 0.03 80);
+  --accent: oklch(0.30 0.06 55);
+  --accent-foreground: oklch(0.96 0.015 90);
+  --border: oklch(0.60 0.08 80 / 0.4);
+  --input: oklch(0.27 0.03 60);
+  --ring: oklch(0.85 0.16 95);
+  --hud: oklch(0.85 0.16 95);
+  --hud-glow: oklch(0.90 0.18 95);
+  --gold: oklch(0.95 0 0);
+  --shadow-hud: 0 0 24px oklch(0.85 0.16 95 / 0.35), 0 0 60px oklch(0.85 0.16 95 / 0.15);
+  --shadow-hud-strong: 0 0 40px oklch(0.88 0.18 95 / 0.55), 0 0 100px oklch(0.88 0.18 95 / 0.25);
+  background-image:
+    radial-gradient(ellipse at top, oklch(0.30 0.09 60 / 0.35), transparent 60%),
+    radial-gradient(ellipse at bottom, oklch(0.24 0.07 35 / 0.25), transparent 60%);
+}
+.theme-flame .text-glow {
+  text-shadow: 0 0 8px oklch(0.90 0.18 95 / 0.6), 0 0 24px oklch(0.90 0.18 95 / 0.3);
+}
+
+/* ============ Bolhas sólidas nos temas novos (contraste garantido) ============ */
+.theme-purple .jarvis-msg-user,
+.theme-yellow .jarvis-msg-user,
+.theme-bw .jarvis-msg-user,
+.theme-brown .jarvis-msg-user,
+.theme-flame .jarvis-msg-user {
+  background-color: color-mix(in oklab, var(--card) 88%, var(--gold));
+}
+.theme-purple .jarvis-msg-assistant,
+.theme-yellow .jarvis-msg-assistant,
+.theme-bw .jarvis-msg-assistant,
+.theme-brown .jarvis-msg-assistant,
+.theme-flame .jarvis-msg-assistant {
+  background-color: color-mix(in oklab, var(--card) 88%, var(--hud));
+  box-shadow: 0 0 20px color-mix(in oklab, var(--hud) 25%, transparent);
+}
+
+/* ============ Holograma de fundo da interface ============ */
+@keyframes holo-float {
+  0%, 100% { transform: translate3d(-50%, -50%, 0) rotateX(62deg) rotateZ(0deg) scale(1); }
+  50% { transform: translate3d(-50%, -54%, 0) rotateX(58deg) rotateZ(180deg) scale(1.05); }
+}
+.holo-stage {
+  perspective: 900px;
+  perspective-origin: 50% 45%;
+}
+.holo-orbit {
+  animation: holo-float 34s ease-in-out infinite;
+  transform-style: preserve-3d;
+}

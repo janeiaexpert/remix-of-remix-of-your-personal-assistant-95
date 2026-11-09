@@ -48,31 +48,40 @@ async function call(cfg: BridgeConfig, path: string, body?: unknown, timeoutMs =
       "Bloqueado pelo navegador (conteúdo misto): esta página é HTTPS e o endereço da bridge é HTTP em rede local. Use um túnel HTTPS (ex: ngrok/cloudflared) apontando para o agente, ou abra o app em HTTP.",
     );
   }
-  const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
-  let res: Response;
-  try {
-    res = await fetch(`${cfg.url}${path}`, {
-      method: body === undefined ? "GET" : "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${cfg.token}`,
-      },
-      body: body === undefined ? undefined : JSON.stringify(body),
-      signal: ctrl.signal,
-    });
-  } catch (e) {
-    if (e instanceof DOMException && e.name === "AbortError") {
-      throw new Error(
-        `Sem resposta em ${timeoutMs / 1000}s de ${cfg.url}. Verifique se o agente está rodando e se o endereço/porta estão corretos (mesma rede).`,
-      );
+  // Retry contra quedas de rede (celular/Tailscale): 3 tentativas.
+  // Nao repete respostas HTTP (4xx/5xx), so falha de conexao.
+  let res: Response | null = null;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+    try {
+      res = await fetch(`${cfg.url}${path}`, {
+        method: body === undefined ? "GET" : "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${cfg.token}`,
+        },
+        body: body === undefined ? undefined : JSON.stringify(body),
+        signal: ctrl.signal,
+      });
+      clearTimeout(timer);
+      break;
+    } catch (e) {
+      clearTimeout(timer);
+      if (e instanceof DOMException && e.name === "AbortError") {
+        throw new Error(
+          `Sem resposta em ${timeoutMs / 1000}s de ${cfg.url}. Verifique se o agente está rodando e se o endereço/porta estão corretos (mesma rede).`,
+        );
+      }
+      if (attempt >= 2) {
+        throw new Error(
+          `Não foi possível alcançar ${cfg.url}. Agente rodando? Se estiver em outro dispositivo, use JARVIS_HOST=0.0.0.0 e o IP local. (${e instanceof Error ? e.message : String(e)})`,
+        );
+      }
+      await new Promise((r) => setTimeout(r, 1200));
     }
-    throw new Error(
-      `Não foi possível alcançar ${cfg.url}. Agente rodando? Se estiver em outro dispositivo, use JARVIS_HOST=0.0.0.0 e o IP local. (${e instanceof Error ? e.message : String(e)})`,
-    );
-  } finally {
-    clearTimeout(timer);
   }
+  if (!res) throw new Error(`Não foi possível alcançar ${cfg.url}.`);
   const text = await res.text();
   let data: unknown;
   try {
@@ -106,24 +115,51 @@ export async function runTool(
         cmd: input.cmd,
         cwd: input.cwd,
         timeout: input.timeout,
-      });
+      }, 30000);
     case "python3_exec":
       return call(cfg, "/python3", {
         code: input.code,
         cwd: input.cwd,
         args: input.args,
         timeout: input.timeout,
-      });
+      }, 30000);
     case "fs_read":
-      return call(cfg, "/read", { path: input.path });
+      return call(cfg, "/read", { path: input.path }, 20000);
+    case "image_view":
+      return call(cfg, "/image", { path: input.path }, 20000);
     case "fs_write":
       return call(cfg, "/write", {
         path: input.path,
         content: input.content ?? "",
         append: input.append ?? false,
-      });
+      }, 20000);
     case "fs_list":
-      return call(cfg, "/list", { path: input.path ?? "." });
+      return call(cfg, "/list", { path: input.path ?? "." }, 20000);
+    case "open_app":
+      return call(cfg, "/open", { target: input.target, args: input.args }, 20000);
+    case "take_screenshot":
+      return call(cfg, "/screenshot", {}, 30000);
+    case "mouse_control":
+      return call(cfg, "/mouse", {
+        action: input.action,
+        x: input.x,
+        y: input.y,
+        toX: input.toX,
+        toY: input.toY,
+        button: input.button,
+        clicks: input.clicks,
+        delta: input.delta,
+      }, 20000);
+    case "open_and_view": {
+      const opened = await call(cfg, "/open", { target: input.target }, 20000);
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      const screenshot = await call(cfg, "/screenshot", {}, 30000);
+      return { opened, ...(screenshot as Record<string, unknown>) };
+    }
+    case "type_text":
+      return call(cfg, "/type", { text: input.text, window: input.window }, 30000);
+    case "speak_text":
+      return call(cfg, "/speak", { text: input.text }, 90000);
     default:
       throw new Error(`Unknown local tool: ${name}`);
   }

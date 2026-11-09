@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { mixedContentBlocked } from "./bridge";
 
 type SpeechRecognitionCtor = new () => SpeechRecognitionInstance;
 interface SpeechRecognitionInstance extends EventTarget {
@@ -82,128 +83,225 @@ export function useSpeech(onFinal: (text: string) => void) {
   return { listening, interim, supported, start, stop };
 }
 
-// ------- Server-side TTS playback (Lovable AI, PCM stream) -------
+// ------- TTS via Google (voz natural, sem robótica) -------
 
-import { createParser } from "eventsource-parser";
+let currentAudio: HTMLAudioElement | null = null;
+let sharedCtx: AudioContext | null = null;
 
-let audioCtx: AudioContext | null = null;
-let currentAbort: AbortController | null = null;
-
-function getCtx(): AudioContext | null {
-  if (typeof window === "undefined") return null;
-  const Ctor =
-    window.AudioContext ??
-    (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-  if (!Ctor) return null;
-  if (!audioCtx) audioCtx = new Ctor({ sampleRate: 24000 });
-  return audioCtx;
-}
-
-/** Call inside a user gesture (click) to unlock audio playback. */
+// Desbloqueia áudio no iOS (Safari barra play() sem gesto recente).
+// Chame em todo gesto do usuário (enviar, tocar botão).
 export async function primeAudio() {
-  const ctx = getCtx();
-  if (ctx && ctx.state === "suspended") {
-    await ctx.resume().catch(() => {});
+  try {
+    if (typeof window === "undefined") return;
+    const Ctor =
+      window.AudioContext ??
+      (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    if (!Ctor) return;
+    if (!sharedCtx) sharedCtx = new Ctor();
+    if (sharedCtx.state === "suspended") await sharedCtx.resume().catch(() => {});
+    const buf = sharedCtx.createBuffer(1, 1, 22050);
+    const src = sharedCtx.createBufferSource();
+    src.buffer = buf;
+    src.connect(sharedCtx.destination);
+    src.start(0);
+  } catch {
+    /* sem áudio */
   }
 }
 
 export function cancelSpeech() {
-  if (currentAbort) {
-    currentAbort.abort();
-    currentAbort = null;
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio = null;
   }
+  if (typeof window !== "undefined") window.speechSynthesis?.cancel();
+}
+
+// ------- TTS: voz masculina do aparelho (estilo Jarvis) -------
+
+function pickMaleVoice(): SpeechSynthesisVoice | null {
+  if (typeof window === "undefined" || !window.speechSynthesis) return null;
+  const all = window.speechSynthesis.getVoices();
+  const pt = all.filter((v) => (v.lang || "").toLowerCase().replace("_", "-").startsWith("pt"));
+  const pool = pt.length ? pt : all;
+  if (!pool.length) return null;
+  const male = pool.find((v) =>
+    /antonio|daniel|felipe|thiago|rafael|diego|paulo|carlos|joao|pedro|lucas|gabriel|male|masculin|homem/i.test(v.name),
+  );
+  if (male) return male;
+  const notFemale = pool.find(
+    (v) => !/maria|luciana|helena|ana|fernanda|camila|beatriz|female|femin/i.test(v.name),
+  );
+  return notFemale ?? pool[0] ?? null;
+}
+
+function splitSentences(text: string): string[] {
+  const parts = text.match(/[^.!?…\n]+[.!?…\n]+|[^.!?…\n]+$/g);
+  const clean = (parts ?? [text]).map((s) => s.trim()).filter(Boolean);
+  return clean.length ? clean : [text];
+}
+
+// Remove markdown/codigo para a VOZ nao ler "asterisco, barra, etc".
+// O chat continua exibindo formatado; so a fala e limpa.
+export function cleanForSpeech(text: string): string {
+  let s = text;
+  s = s.replace(/```[\s\S]*?```/g, " codigo no chat. ");
+  s = s.replace(/`([^`]+)`/g, "$1");
+  s = s.replace(/!\[([^\]]*)\]\([^)]+\)/g, "$1");
+  s = s.replace(/\[([^\]]+)\]\([^)]+\)/g, "$1");
+  s = s.replace(/(\*\*|__)(.*?)\1/g, "$2");
+  s = s.replace(/(^|[\s(])[*_~]([^*_~\n]+)[*_~]/g, "$1$2");
+  s = s.replace(/^#{1,6}\s+/gm, "");
+  s = s.replace(/^\s*[-*+]\s+/gm, "");
+  s = s.replace(/^\s*\d+[.)]\s+/gm, "");
+  s = s.replace(/^\s*>\s?/gm, "");
+  s = s.replace(/\s+/g, " ").trim();
+  return s;
+}
+
+export function pauseSpeech(): boolean {
+  if (currentAudio && !currentAudio.paused) {
+    currentAudio.pause();
+    return true;
+  }
+  if (typeof window !== "undefined" && window.speechSynthesis?.speaking && !window.speechSynthesis.paused) {
+    window.speechSynthesis.pause();
+    return true;
+  }
+  return false;
+}
+
+export function resumeSpeech(): boolean {
+  if (currentAudio && currentAudio.paused) {
+    void currentAudio.play().catch(() => {});
+    return true;
+  }
+  if (typeof window !== "undefined" && window.speechSynthesis?.paused) {
+    window.speechSynthesis.resume();
+    return true;
+  }
+  return false;
 }
 
 export async function speak(
   text: string,
-  opts: { onStart?: () => void; onEnd?: () => void } = {},
+  opts: { onStart?: () => void; onEnd?: () => void; bridge?: { url: string; token: string } | null } = {},
 ) {
-  const ctx = getCtx();
-  if (!ctx || !text.trim()) {
+  if (typeof window === "undefined" || !text.trim()) {
     opts.onEnd?.();
     return;
   }
-  cancelSpeech();
-  const abort = new AbortController();
-  currentAbort = abort;
-
-  if (ctx.state === "suspended") {
-    await ctx.resume().catch(() => {});
+  const clean = cleanForSpeech(text);
+  if (!clean) {
+    opts.onEnd?.();
+    return;
   }
 
-  let playhead = 0;
-  let pending = new Uint8Array(0);
-  let started = false;
-  let lastEndTime = 0;
-
-  const playChunk = (incoming: Uint8Array) => {
-    const bytes = new Uint8Array(pending.length + incoming.length);
-    bytes.set(pending);
-    bytes.set(incoming, pending.length);
-    const usable = bytes.length - (bytes.length % 2);
-    pending = bytes.slice(usable);
-    if (usable === 0) return;
-    const samples = new Int16Array(bytes.buffer, 0, usable / 2);
-    const floats = Float32Array.from(samples, (s) => s / 32768);
-    const buffer = ctx.createBuffer(1, floats.length, 24000);
-    buffer.copyToChannel(floats, 0);
-    const source = ctx.createBufferSource();
-    source.buffer = buffer;
-    source.connect(ctx.destination);
-    if (playhead === 0) playhead = ctx.currentTime + 0.08;
-    else playhead = Math.max(playhead, ctx.currentTime);
-    source.start(playhead);
-    playhead += buffer.duration;
-    lastEndTime = playhead;
-    if (!started) {
-      started = true;
-      opts.onStart?.();
-    }
+  const playBlob = (blob: Blob): Promise<void> => {
+    const url = URL.createObjectURL(blob);
+    const audio = new Audio(url);
+    currentAudio = audio;
+    audio.onplay = () => opts.onStart?.();
+    audio.onended = () => {
+      currentAudio = null;
+      URL.revokeObjectURL(url);
+      opts.onEnd?.();
+    };
+    audio.onerror = () => {
+      currentAudio = null;
+      URL.revokeObjectURL(url);
+      opts.onEnd?.();
+    };
+    return audio.play();
   };
 
-  try {
-    const res = await fetch("/api/tts", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text }),
-      signal: abort.signal,
-    });
-    if (!res.ok || !res.body) {
-      console.error("TTS failed", res.status, await res.text().catch(() => ""));
-      opts.onEnd?.();
-      return;
-    }
-    const parser = createParser({
-      onEvent(event) {
-        let payload: { type: string; audio?: string };
-        try {
-          payload = JSON.parse(event.data);
-        } catch {
-          return;
+  // 1) Bridge direta (voz "Antônio" do PC) — cliente → bridge, sem depender
+  //    da Vercel. Funciona no PC e no celular quando a URL é o túnel HTTPS.
+  if (opts.bridge?.url && opts.bridge?.token && !mixedContentBlocked(opts.bridge.url)) {
+    for (let attempt = 0; attempt < 4; attempt++) {
+      if (attempt > 0) await new Promise((r) => setTimeout(r, 1500));
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 60000);
+      try {
+        const res = await fetch(`${opts.bridge.url.replace(/\/$/, "")}/speak`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${opts.bridge.token}` },
+          body: JSON.stringify({ text: clean.slice(0, 800) }),
+          signal: ctrl.signal,
+        });
+        clearTimeout(timer);
+        if (res.ok) {
+          const blob = await res.blob();
+          if (blob.size > 0) {
+            await playBlob(blob);
+            return;
+          }
         }
-        if (payload.type !== "speech.audio.delta" || !payload.audio) return;
-        const binary = atob(payload.audio);
-        const bytes = new Uint8Array(binary.length);
-        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-        playChunk(bytes);
+      } catch {
+        clearTimeout(timer);
+        /* tenta de novo */
+      }
+    }
+  }
+
+  // 2) /api/tts (Vercel → bridge, ou Gemini "Charon"/Google como fallback)
+  try {
+    const res = await fetch(
+      `${window.location.origin}/api/tts`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: clean.slice(0, 800) }),
       },
-    });
-    const reader = res.body.pipeThrough(new TextDecoderStream()).getReader();
-    while (true) {
-      const { value, done } = await reader.read();
-      if (done) break;
-      if (value) parser.feed(value);
+    );
+    if (res.ok) {
+      const blob = await res.blob();
+      if (blob.size > 0) {
+        await playBlob(blob);
+        return;
+      }
     }
-    // Schedule onEnd right after last buffer finishes
-    const remaining = Math.max(0, lastEndTime - ctx.currentTime);
-    window.setTimeout(() => opts.onEnd?.(), remaining * 1000 + 50);
-  } catch (err) {
-    if ((err as { name?: string })?.name !== "AbortError") {
-      console.error("TTS error", err);
-    }
+  } catch {
+    /* cai para a voz do aparelho */
+  }
+
+  // 3) Fallback: voz do aparelho
+  if (!window.speechSynthesis) {
     opts.onEnd?.();
-  } finally {
-    if (currentAbort === abort) currentAbort = null;
+    return;
+  }
+  try {
+    window.speechSynthesis.cancel();
+    if (currentAudio) {
+      currentAudio.pause();
+      currentAudio = null;
+    }
+    const voice = pickMaleVoice();
+    const chunks = splitSentences(clean);
+    let started = false;
+    chunks.forEach((part, i) => {
+      const utterance = new SpeechSynthesisUtterance(part);
+      utterance.lang = "pt-BR";
+      utterance.rate = 1.05;
+      utterance.pitch = 1.0;
+      utterance.volume = 1.0;
+      if (voice) utterance.voice = voice;
+      utterance.onstart = () => {
+        if (!started) {
+          started = true;
+          opts.onStart?.();
+        }
+      };
+      if (i === chunks.length - 1) {
+        utterance.onend = () => opts.onEnd?.();
+        utterance.onerror = () => opts.onEnd?.();
+      }
+      window.speechSynthesis.speak(utterance);
+    });
+    setTimeout(() => {
+      if (!started) opts.onEnd?.();
+    }, 500);
+  } catch {
+    opts.onEnd?.();
   }
 }
-

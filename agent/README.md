@@ -26,7 +26,7 @@ You'll see something like:
 ============================================================
   J.A.R.V.I.S. local bridge — online
 ============================================================
-  URL       : http://127.0.0.1:7842
+  URL       : http://127.0.0.1:7843
   Token     : Xq7p...long-random-token...
   Base cwd  : /Users/you
 ============================================================
@@ -68,7 +68,7 @@ Requirements:
 | Env var        | Default                      | Purpose                                  |
 | -------------- | ---------------------------- | ---------------------------------------- |
 | `JARVIS_HOST`  | `127.0.0.1`                  | Interface to bind (`0.0.0.0` = any)      |
-| `JARVIS_PORT`  | `7842`                       | Port to listen on                        |
+| `JARVIS_PORT`  | `7843`                       | Port to listen on                        |
 | `JARVIS_TOKEN` | random, printed on startup   | Fix the token instead of regenerating    |
 | `JARVIS_CWD`   | current directory            | Base directory for relative paths        |
 

@@ -10,11 +10,45 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiDiagBridgeRouteImport } from './routes/api/diag-bridge'
+import { Route as ApiImageRouteImport } from './routes/api/image'
+import { Route as ApiScheduledTasksRouteImport } from './routes/api/scheduled-tasks'
+import { Route as ApiTelegramAgentRouteImport } from './routes/api/telegram-agent'
+import { Route as ApiTelegramWebhookRouteImport } from './routes/api/telegram-webhook'
 import { Route as ApiTtsRouteImport } from './routes/api/tts'
+import { Route as ApiUploadRouteImport } from './routes/api/upload'
+import { Route as ApiCronAiNewsRouteImport } from './routes/api/cron/ai-news'
+import { Route as ApiShotKeyRouteImport } from './routes/api/shot.$key'
+import { Route as ApiVideoKeyRouteImport } from './routes/api/video.$key'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiDiagBridgeRoute = ApiDiagBridgeRouteImport.update({
+  id: '/api/diag-bridge',
+  path: '/api/diag-bridge',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiImageRoute = ApiImageRouteImport.update({
+  id: '/api/image',
+  path: '/api/image',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiScheduledTasksRoute = ApiScheduledTasksRouteImport.update({
+  id: '/api/scheduled-tasks',
+  path: '/api/scheduled-tasks',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiTelegramAgentRoute = ApiTelegramAgentRouteImport.update({
+  id: '/api/telegram-agent',
+  path: '/api/telegram-agent',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiTelegramWebhookRoute = ApiTelegramWebhookRouteImport.update({
+  id: '/api/telegram-webhook',
+  path: '/api/telegram-webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiTtsRoute = ApiTtsRouteImport.update({
@@ -22,31 +56,121 @@ const ApiTtsRoute = ApiTtsRouteImport.update({
   path: '/api/tts',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiUploadRoute = ApiUploadRouteImport.update({
+  id: '/api/upload',
+  path: '/api/upload',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiCronAiNewsRoute = ApiCronAiNewsRouteImport.update({
+  id: '/api/cron/ai-news',
+  path: '/api/cron/ai-news',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiShotKeyRoute = ApiShotKeyRouteImport.update({
+  id: '/api/shot/$key',
+  path: '/api/shot/$key',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiVideoKeyRoute = ApiVideoKeyRouteImport.update({
+  id: '/api/video/$key',
+  path: '/api/video/$key',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/api/diag-bridge': typeof ApiDiagBridgeRoute
+  '/api/image': typeof ApiImageRoute
+  '/api/scheduled-tasks': typeof ApiScheduledTasksRoute
+  '/api/telegram-agent': typeof ApiTelegramAgentRoute
+  '/api/telegram-webhook': typeof ApiTelegramWebhookRoute
   '/api/tts': typeof ApiTtsRoute
+  '/api/upload': typeof ApiUploadRoute
+  '/api/cron/ai-news': typeof ApiCronAiNewsRoute
+  '/api/shot/$key': typeof ApiShotKeyRoute
+  '/api/video/$key': typeof ApiVideoKeyRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/api/diag-bridge': typeof ApiDiagBridgeRoute
+  '/api/image': typeof ApiImageRoute
+  '/api/scheduled-tasks': typeof ApiScheduledTasksRoute
+  '/api/telegram-agent': typeof ApiTelegramAgentRoute
+  '/api/telegram-webhook': typeof ApiTelegramWebhookRoute
   '/api/tts': typeof ApiTtsRoute
+  '/api/upload': typeof ApiUploadRoute
+  '/api/cron/ai-news': typeof ApiCronAiNewsRoute
+  '/api/shot/$key': typeof ApiShotKeyRoute
+  '/api/video/$key': typeof ApiVideoKeyRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/api/diag-bridge': typeof ApiDiagBridgeRoute
+  '/api/image': typeof ApiImageRoute
+  '/api/scheduled-tasks': typeof ApiScheduledTasksRoute
+  '/api/telegram-agent': typeof ApiTelegramAgentRoute
+  '/api/telegram-webhook': typeof ApiTelegramWebhookRoute
   '/api/tts': typeof ApiTtsRoute
+  '/api/upload': typeof ApiUploadRoute
+  '/api/cron/ai-news': typeof ApiCronAiNewsRoute
+  '/api/shot/$key': typeof ApiShotKeyRoute
+  '/api/video/$key': typeof ApiVideoKeyRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/api/tts'
+  fullPaths:
+    | '/'
+    | '/api/diag-bridge'
+    | '/api/image'
+    | '/api/scheduled-tasks'
+    | '/api/telegram-agent'
+    | '/api/telegram-webhook'
+    | '/api/tts'
+    | '/api/upload'
+    | '/api/cron/ai-news'
+    | '/api/shot/$key'
+    | '/api/video/$key'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/api/tts'
-  id: '__root__' | '/' | '/api/tts'
+  to:
+    | '/'
+    | '/api/diag-bridge'
+    | '/api/image'
+    | '/api/scheduled-tasks'
+    | '/api/telegram-agent'
+    | '/api/telegram-webhook'
+    | '/api/tts'
+    | '/api/upload'
+    | '/api/cron/ai-news'
+    | '/api/shot/$key'
+    | '/api/video/$key'
+  id:
+    | '__root__'
+    | '/'
+    | '/api/diag-bridge'
+    | '/api/image'
+    | '/api/scheduled-tasks'
+    | '/api/telegram-agent'
+    | '/api/telegram-webhook'
+    | '/api/tts'
+    | '/api/upload'
+    | '/api/cron/ai-news'
+    | '/api/shot/$key'
+    | '/api/video/$key'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ApiDiagBridgeRoute: typeof ApiDiagBridgeRoute
+  ApiImageRoute: typeof ApiImageRoute
+  ApiScheduledTasksRoute: typeof ApiScheduledTasksRoute
+  ApiTelegramAgentRoute: typeof ApiTelegramAgentRoute
+  ApiTelegramWebhookRoute: typeof ApiTelegramWebhookRoute
   ApiTtsRoute: typeof ApiTtsRoute
+  ApiUploadRoute: typeof ApiUploadRoute
+  ApiCronAiNewsRoute: typeof ApiCronAiNewsRoute
+  ApiShotKeyRoute: typeof ApiShotKeyRoute
+  ApiVideoKeyRoute: typeof ApiVideoKeyRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -58,6 +182,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/diag-bridge': {
+      id: '/api/diag-bridge'
+      path: '/api/diag-bridge'
+      fullPath: '/api/diag-bridge'
+      preLoaderRoute: typeof ApiDiagBridgeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/image': {
+      id: '/api/image'
+      path: '/api/image'
+      fullPath: '/api/image'
+      preLoaderRoute: typeof ApiImageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/scheduled-tasks': {
+      id: '/api/scheduled-tasks'
+      path: '/api/scheduled-tasks'
+      fullPath: '/api/scheduled-tasks'
+      preLoaderRoute: typeof ApiScheduledTasksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/telegram-agent': {
+      id: '/api/telegram-agent'
+      path: '/api/telegram-agent'
+      fullPath: '/api/telegram-agent'
+      preLoaderRoute: typeof ApiTelegramAgentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/telegram-webhook': {
+      id: '/api/telegram-webhook'
+      path: '/api/telegram-webhook'
+      fullPath: '/api/telegram-webhook'
+      preLoaderRoute: typeof ApiTelegramWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/tts': {
       id: '/api/tts'
       path: '/api/tts'
@@ -65,12 +224,49 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiTtsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/upload': {
+      id: '/api/upload'
+      path: '/api/upload'
+      fullPath: '/api/upload'
+      preLoaderRoute: typeof ApiUploadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/cron/ai-news': {
+      id: '/api/cron/ai-news'
+      path: '/api/cron/ai-news'
+      fullPath: '/api/cron/ai-news'
+      preLoaderRoute: typeof ApiCronAiNewsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/shot/$key': {
+      id: '/api/shot/$key'
+      path: '/api/shot/$key'
+      fullPath: '/api/shot/$key'
+      preLoaderRoute: typeof ApiShotKeyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/video/$key': {
+      id: '/api/video/$key'
+      path: '/api/video/$key'
+      fullPath: '/api/video/$key'
+      preLoaderRoute: typeof ApiVideoKeyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ApiDiagBridgeRoute: ApiDiagBridgeRoute,
+  ApiImageRoute: ApiImageRoute,
+  ApiScheduledTasksRoute: ApiScheduledTasksRoute,
+  ApiTelegramAgentRoute: ApiTelegramAgentRoute,
+  ApiTelegramWebhookRoute: ApiTelegramWebhookRoute,
   ApiTtsRoute: ApiTtsRoute,
+  ApiUploadRoute: ApiUploadRoute,
+  ApiCronAiNewsRoute: ApiCronAiNewsRoute,
+  ApiShotKeyRoute: ApiShotKeyRoute,
+  ApiVideoKeyRoute: ApiVideoKeyRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

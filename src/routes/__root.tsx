@@ -85,21 +85,21 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "J.A.R.V.I.S. — Assistente pessoal de IA" },
       { name: "twitter:description", content: "Seu assistente pessoal J.A.R.V.I.S. no navegador: converse por voz ou texto, em português." },
-      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/1d689658-f9ff-4bf7-9d86-424e2f156f33" },
-      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/1d689658-f9ff-4bf7-9d86-424e2f156f33" },
+      { property: "og:image", content: "https://jarvis-azul.vercel.app/jarvis-og.jpg" },
+      { name: "twitter:image", content: "https://jarvis-azul.vercel.app/jarvis-og.jpg" },
     ],
     links: [
       {
         rel: "stylesheet",
         href: appCss,
       },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "icon", href: "/favicon.ico?v=2", type: "image/x-icon" },
     ],
   }),
   shellComponent: RootShell,
   component: RootComponent,
   notFoundComponent: NotFoundComponent,
-  errorComponent: ErrorComponent,
+  errorComponent: ErrorComponent as never,
 });
 
 function RootShell({ children }: { children: ReactNode }) {

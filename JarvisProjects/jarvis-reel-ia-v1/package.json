@@ -1,0 +1,14 @@
+{
+  "name": "jarvis-reel-ia-v1",
+  "version": "1.0.0",
+  "scripts": {
+    "render": "remotion render src/index.ts Main out/video.mp4"
+  },
+  "dependencies": {
+    "remotion": "4.0.0",
+    "@remotion/cli": "4.0.0",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "@remotion/media-utils": "4.0.0"
+  }
+}
