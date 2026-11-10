@@ -1,4 +1,4 @@
-import { duckDuckGoSearch } from "./jarvis.functions";
+import { duckDuckGoSearch, tavilySearch } from "./jarvis.functions";
 import { tgSend } from "./telegram.server";
 
 export type ScheduledTaskConfig = {
@@ -62,7 +62,9 @@ const BLOCKED_HOSTS = ["bit.ly", "tinyurl.com", "t.co", "goo.gl", "ow.ly", "is.g
 async function createNewsReport(): Promise<string> {
   const sections = await Promise.all(
     NEWS_QUERIES.map(async ([topic, query]) => {
-      const raw = await duckDuckGoSearch(query, 5);
+      const raw = process.env.TAVILY_API_KEY
+        ? await tavilySearch(query, 5)
+        : await duckDuckGoSearch(query, 5);
       const hits = raw.filter((h) => {
         try {
           const u = new URL(h.url);

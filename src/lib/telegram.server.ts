@@ -4,7 +4,7 @@
 import { generateText, stepCountIs, tool, type ModelMessage } from "ai";
 import { z } from "zod";
 import { generateWithFallback, createJarvisModel } from "./ai-gateway.server";
-import { buildSystem, duckDuckGoSearch, stripReasoningParts } from "./jarvis.functions";
+import { buildSystem, duckDuckGoSearch, tavilySearch, stripReasoningParts } from "./jarvis.functions";
 import { chatImageUrl, generateImage, RATIOS, storeShot, type ImageRatio } from "./imagegen.server";
 import { listIntegrations, listarFerramentas, executarFerramenta } from "./integrations.server";
 import { editarVideoNoPc } from "./video.server";
@@ -210,7 +210,9 @@ function serverTools(refImage: { data: string; mediaType: string } | null) {
     inputSchema: z.object({ query: z.string() }),
     execute: async ({ query }) => {
       try {
-        const results = await duckDuckGoSearch(query, 5);
+        const results = process.env.TAVILY_API_KEY
+          ? await tavilySearch(query, 5)
+          : await duckDuckGoSearch(query, 5);
         return results.length ? { results } : { results: [], note: "Nenhum resultado." };
       } catch (e) {
         return { results: [], error: e instanceof Error ? e.message : "Falha." };

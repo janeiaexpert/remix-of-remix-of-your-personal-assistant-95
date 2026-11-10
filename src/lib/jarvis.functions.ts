@@ -537,6 +537,36 @@ export async function duckDuckGoSearch(query: string, maxResults = 5): Promise<S
   }
 }
 
+export async function tavilySearch(query: string, maxResults = 5): Promise<SearchHit[]> {
+  const key = process.env.TAVILY_API_KEY;
+  if (!key) throw new Error("TAVILY_API_KEY não configurada.");
+  try {
+    const res = await fetch("https://api.tavily.com/search", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        api_key: key,
+        query,
+        max_results: maxResults,
+        search_depth: "basic",
+        include_answer: false,
+        include_raw_content: false,
+      }),
+    });
+    if (!res.ok) throw new Error(`Tavily ${res.status}`);
+    const data = (await res.json()) as { results?: { title?: string; url?: string; content?: string }[] };
+    const hits: SearchHit[] = [];
+    for (const r of data.results ?? []) {
+      if (r.url && r.title) {
+        hits.push({ title: r.title, url: r.url, snippet: (r.content || "").slice(0, 400) });
+      }
+    }
+    return hits.length ? hits : await fallbackSearch(query, maxResults);
+  } catch (e) {
+    return fallbackSearch(query, maxResults);
+  }
+}
+
 export function trimHistory(messages: unknown[]): unknown[] {
   const arr = Array.isArray(messages) ? messages : [];
   // 80 mensagens cabem no limite gratuito (rápido, sem fallback). Fatos
@@ -603,7 +633,9 @@ export const askJarvis = createServerFn({ method: "POST" })
       inputSchema: z.object({ query: z.string().describe("Consulta otimizada.") }),
       execute: async ({ query }) => {
         try {
-          const results = await duckDuckGoSearch(query, 5);
+          const results = process.env.TAVILY_API_KEY
+            ? await tavilySearch(query, 5)
+            : await duckDuckGoSearch(query, 5);
           return results.length ? { results } : { results: [], note: "Nenhum resultado." };
         } catch (e) {
           return { results: [], error: e instanceof Error ? e.message : "Falha na busca." };
