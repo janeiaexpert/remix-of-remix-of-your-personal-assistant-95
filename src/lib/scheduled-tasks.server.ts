@@ -51,18 +51,30 @@ export function getScheduledTaskState(): {
 }
 
 const NEWS_QUERIES = [
-  ["OpenAI", "OpenAI latest news announcements"],
-  ["Anthropic", "Anthropic Claude latest news announcements"],
-  ["Google Gemini", "Google Gemini latest news announcements"],
-  ["IA para negócios", "inteligência artificial negócios empresas novidades"],
+  ["OpenAI", "OpenAI latest news announcements 2026"],
+  ["Anthropic", "Anthropic Claude latest news announcements 2026"],
+  ["Google Gemini", "Google Gemini latest news announcements 2026"],
+  ["IA para negócios", "inteligência artificial negócios empresas novidades 2026"],
 ] as const;
+
+const BLOCKED_HOSTS = ["bit.ly", "tinyurl.com", "t.co", "goo.gl", "ow.ly", "is.gd", "buff.ly"];
 
 async function createNewsReport(): Promise<string> {
   const sections = await Promise.all(
-    NEWS_QUERIES.map(async ([topic, query]) => ({
-      topic,
-      hits: await duckDuckGoSearch(query, 3),
-    })),
+    NEWS_QUERIES.map(async ([topic, query]) => {
+      const raw = await duckDuckGoSearch(query, 5);
+      const hits = raw.filter((h) => {
+        try {
+          const u = new URL(h.url);
+          if (u.protocol !== "https:") return false;
+          if (BLOCKED_HOSTS.some((b) => u.hostname.includes(b))) return false;
+          return true;
+        } catch {
+          return false;
+        }
+      }).slice(0, 3);
+      return { topic, hits };
+    }),
   );
   const total = sections.reduce((sum, section) => sum + section.hits.length, 0);
   if (!total) throw new Error("A busca não encontrou resultados nas fontes consultadas.");
@@ -87,7 +99,7 @@ async function createNewsReport(): Promise<string> {
     })
     .join("\n\n");
 
-  return `Destaques de IA da semana — ${timestamp} (horário de Brasília)\n\n${body}\n\nResumo automático compilado de buscas. Abra as fontes para confirmar datas e detalhes.`;
+  return `Destaques de IA da semana — ${timestamp} (horário de Brasília)\n\n${body}\n\nResumo automático compilado de buscas públicas. Confirme datas e detalhes nas fontes antes de compartilhar.`;
 }
 
 export async function runScheduledNews(options: {
