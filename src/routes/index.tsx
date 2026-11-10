@@ -986,14 +986,14 @@ function Jarvis() {
           className="fixed bottom-4 right-4 z-50 max-w-sm rounded-lg border border-hud/40 bg-card/95 p-4 shadow-hud backdrop-blur-sm"
           onClick={() => setTgNotify(null)}
         >
-          <div className="mb-1 flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-hud">
+          <div className="mb-1 flex items-center gap-2 font-mono text-sm uppercase tracking-widest text-hud">
             <span>●</span> Mensagem no Telegram
           </div>
-          <p className="font-mono text-xs text-foreground">{tgNotify.text}</p>
+          <p className="font-mono text-base text-foreground">{tgNotify.text}</p>
           {tgNotify.reply && (
-            <p className="mt-1 font-mono text-[10px] text-muted-foreground">Jarvis: {tgNotify.reply}</p>
+            <p className="mt-2 font-mono text-sm text-muted-foreground">Jarvis: {tgNotify.reply}</p>
           )}
-          <p className="mt-2 font-mono text-[9px] text-muted-foreground/60">clique para fechar</p>
+          <p className="mt-2 font-mono text-[10px] text-muted-foreground/60">clique para fechar</p>
         </div>
       )}
       {/* HUD background */}
