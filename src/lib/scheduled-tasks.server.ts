@@ -76,17 +76,18 @@ async function createNewsReport(): Promise<string> {
     .map(({ topic, hits }) => {
       const items = hits.length
         ? hits
-            .map(
-              (hit) =>
-                `• ${hit.title}\n  ${hit.snippet || "Sem descrição disponível."}\n  ${hit.url}`,
-            )
-            .join("\n")
+            .map((hit, i) => {
+              const snippet = (hit.snippet || "Sem descrição disponível.").trim();
+              const short = snippet.length > 220 ? snippet.slice(0, 217) + "…" : snippet;
+              return `${i + 1}. ${hit.title}\n   ${short}\n   Fonte: ${hit.url}`;
+            })
+            .join("\n\n")
         : "• Nenhum resultado encontrado nesta busca.";
-      return `${topic}\n${items}`;
+      return `▸ ${topic}\n${items}`;
     })
     .join("\n\n");
 
-  return `Destaques de IA — ${timestamp} (horário de Brasília)\n\n${body}\n\nResumo compilado de resultados de busca. Abra as fontes para confirmar datas e detalhes.`;
+  return `Destaques de IA da semana — ${timestamp} (horário de Brasília)\n\n${body}\n\nResumo automático compilado de buscas. Abra as fontes para confirmar datas e detalhes.`;
 }
 
 export async function runScheduledNews(options: {
