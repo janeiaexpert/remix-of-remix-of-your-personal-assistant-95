@@ -441,8 +441,59 @@ function serverTools(refImage: { data: string; mediaType: string } | null) {
       }
     },
   });
+  const python3_exec = tool({
+    description: "Executa código Python 3 direto no PC do senhor (via bridge). Útil para scripts, automação, cálculos.",
+    inputSchema: z.object({ code: z.string(), args: z.array(z.string()).optional(), timeout: z.number().optional() }),
+    execute: async ({ code, args, timeout }) => {
+      try { return await bridgeCall("/python3", { code, args, timeout }) as unknown; }
+      catch (e) { return { error: e instanceof Error ? e.message.slice(0, 300) : String(e) }; }
+    },
+  });
+  const mouse_control = tool({
+    description: "Controla mouse/teclado no PC do senhor (via bridge): mover, clicar, scroll, digitar. Sempre tire screenshot antes e depois.",
+    inputSchema: z.object({ action: z.string(), x: z.number().optional(), y: z.number().optional(), button: z.string().optional(), text: z.string().optional(), amount: z.number().optional() }),
+    execute: async (input) => {
+      try { return await bridgeCall("/mouse", input) as unknown; }
+      catch (e) { return { error: e instanceof Error ? e.message.slice(0, 300) : String(e) }; }
+    },
+  });
+  const open_and_view = tool({
+    description: "Abre app/arquivo/URL no PC do senhor e lê o conteúdo (via bridge).",
+    inputSchema: z.object({ target: z.string(), args: z.array(z.string()).optional() }),
+    execute: async ({ target, args }) => {
+      try {
+        const opened = await bridgeCall("/open", { target, args }) as { ok?: boolean; error?: string };
+        if (!opened?.ok) return { error: opened?.error || "Falha ao abrir." };
+        const read = target.startsWith("http") ? null : await bridgeCall("/read", { path: target }).catch(() => null);
+        return { opened: true, content: read };
+      } catch (e) { return { error: e instanceof Error ? e.message.slice(0, 300) : String(e) }; }
+    },
+  });
+  const gerarSiteConversao = tool({
+    description: "Gera um site interativo completo com copy forte de conversão (landing page, funil de vendas, loja local ou serviço digital). Salva o HTML no disco do senhor e retorna o caminho.",
+    inputSchema: z.object({
+      tipoNegocio: z.string(),
+      oferta: z.string(),
+      publicoAlvo: z.string(),
+      cores: z.string().optional(),
+      nomeSite: z.string().optional(),
+    }),
+    execute: async ({ tipoNegocio, oferta, publicoAlvo, cores, nomeSite }) => {
+      const nome = nomeSite || tipoNegocio;
+      const corPrimaria = cores?.includes("azul") ? "#2563eb" : cores?.includes("preto") ? "#111827" : "#2563eb";
+      const corSecundaria = cores?.includes("branco") ? "#f8fafc" : cores?.includes("dourado") ? "#d97706" : "#f1f5f9";
+      const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>${nome} - ${oferta}</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Segoe UI',sans-serif;background:${corSecundaria};color:#1f2937;line-height:1.6}.container{max-width:1200px;margin:0 auto;padding:0 20px}header{background:${corPrimaria};color:#fff;padding:1rem 0;position:sticky;top:0;z-index:100;box-shadow:0 2px 4px rgba(0,0,0,.1)}.nav{display:flex;justify-content:space-between;align-items:center}.logo{font-size:1.5rem;font-weight:bold}section{padding:3rem 0}.hero{text-align:center;padding:4rem 0}.hero h1{font-size:2.5rem;margin-bottom:1rem}.hero p{font-size:1.2rem;color:#4b5563;margin-bottom:2rem}.cta{display:inline-block;background:${corPrimaria};color:#fff;padding:1rem 2rem;border-radius:8px;text-decoration:none;font-weight:bold;transition:transform .2s}.cta:hover{transform:translateY(-2px)}.features{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:2rem;margin:3rem 0}.feature{background:#fff;padding:2rem;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.1)}.feature h3{color:${corPrimaria};margin-bottom:1rem}footer{background:#1f2937;color:#fff;padding:2rem 0;text-align:center}</style></head><body><header><div class="container nav"><div class="logo">${nome}</div></div></header><section class="hero"><div class="container"><h1>${oferta}</h1><p>Para ${publicoAlvo}</p><a href="#contato" class="cta">Quero saber mais</a></div></section><section><div class="container"><div class="features"><div class="feature"><h3>Benefício 1</h3><p>Descrição do benefício principal.</p></div><div class="feature"><h3>Benefício 2</h3><p>Descrição do segundo benefício.</p></div><div class="feature"><h3>Benefício 3</h3><p>Descrição do terceiro benefício.</p></div></div></div></section><section id="contato"><div class="container" style="text-align:center"><h2>Fale conosco</h2><p>Entre em contato para saber mais sobre ${oferta}.</p></div></section><footer><div class="container"><p>&copy; ${new Date().getFullYear()} ${nome}. Todos os direitos reservados.</p></div></footer></body></html>`;
+      const safeName = (nomeSite || tipoNegocio).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "site";
+      const path = `C:\\\\Users\\\\Administrador\\\\Downloads\\\\${safeName}.html`;
+      try {
+        const res = await bridgeCall("/write", { path, content: html }) as { ok?: boolean; error?: string };
+        if (!res?.ok) return { error: res?.error || "Falha ao salvar o site." };
+        return { ok: true, caminho: path, nota: "Site salvo no disco do senhor. Abra o arquivo no navegador." };
+      } catch (e) { return { error: e instanceof Error ? e.message.slice(0, 300) : String(e) }; }
+    },
+  });
   void refImage;
-    return { web_search, get_datetime, fetch_url, run_js, shell_exec, fs_read, fs_write, fs_list, open_app, type_text, take_screenshot, criar_imagem, editar_video, integracoes_listar, integracao_chamar };
+    return { web_search, get_datetime, fetch_url, run_js, shell_exec, python3_exec, fs_read, fs_write, fs_list, open_app, open_and_view, type_text, mouse_control, take_screenshot, criar_imagem, editar_video, gerarSiteConversao, integracoes_listar, integracao_chamar };
 }
 
 export type TgMessage = { role: "user" | "assistant"; content: unknown };
@@ -452,7 +503,7 @@ export async function runTelegramAgent(msgs: TgMessage[]): Promise<{ text: strin
   const model = createJarvisModel({ vision: hasImage });
   const system =
     buildSystem([], true, []) +
-    "\n\nNo Telegram: responda curto, sem markdown pesado, e NUNCA cite nomes internos de ferramentas (ex: take_screenshot, fs_list, shell_exec). Descreva a ação em português. Se uma ferramenta falhar, diga o erro real; nunca afirme que enviou algo que não enviou.";
+    "\n\nCanal: Telegram. Responda em português do Brasil com a persona completa do J.A.R.V.I.S. (mordomo britânico, 'senhor'). Você é um agente autônomo: use as ferramentas à vontade para executar o que o senhor pedir (PC, arquivos, sites, buscas, prints, etc.), sem pedir permissão exceto em type_text e comandos destrutivos. Não cite nomes internos de ferramentas; descreva a ação em português. Se uma ferramenta falhar, diga o erro real; nunca afirme que fez algo que não fez. Evite markdown pesado; mensagens curtas são preferíveis, mas estenda quando o assunto exigir.";
   const result = await generateWithFallback(model, (m) =>
     generateText({
       model: m,
