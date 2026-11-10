@@ -27,12 +27,21 @@ export async function tgSend(chatId: number | string, text: string): Promise<boo
   for (const c of chunks) {
     if (!c.trim()) continue;
     try {
-      const response = await fetch(api("sendMessage"), {
+      let response = await fetch(api("sendMessage"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ chat_id: chatId, text: c.slice(0, 4096) }),
+        body: JSON.stringify({ chat_id: chatId, text: c.slice(0, 4096), parse_mode: "Markdown" }),
         signal: AbortSignal.timeout(20_000),
       });
+      if (!response.ok) {
+        // Fallback sem formatacao se o Markdown quebrar
+        response = await fetch(api("sendMessage"), {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ chat_id: chatId, text: c.slice(0, 4096) }),
+          signal: AbortSignal.timeout(20_000),
+        });
+      }
       if (!response.ok) delivered = false;
       else {
         const result = (await response.json()) as { ok?: boolean };

@@ -318,11 +318,11 @@ function Jarvis() {
         document.documentElement.classList.toggle(`theme-${t.id}`, on);
         document.body.classList.toggle(`theme-${t.id}`, on);
       }
-      window.localStorage.setItem("jarvis:system:v1", system);
+      if (hydrated) window.localStorage.setItem("jarvis:system:v1", system);
     } catch {
       /* noop */
     }
-  }, [system]);
+  }, [system, hydrated]);
 
   // Hydrate from localStorage
   useEffect(() => {
