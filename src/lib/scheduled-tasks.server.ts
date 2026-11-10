@@ -93,15 +93,15 @@ async function createNewsReport(): Promise<string> {
             .map((hit, i) => {
               const snippet = (hit.snippet || "Sem descrição disponível.").trim();
               const short = snippet.length > 220 ? snippet.slice(0, 217) + "…" : snippet;
-              return `${i + 1}. ${hit.title}\n   ${short}\n   Fonte: ${hit.url}`;
+              return `  ${i + 1}) *${hit.title}*\n     ${short}\n     🔗 Fonte: ${hit.url}`;
             })
             .join("\n\n")
         : "• Nenhum resultado encontrado nesta busca.";
-      return `▸ ${topic}\n${items}`;
+      return `━━━ ${topic.toUpperCase()} ━━━\n${items}`;
     })
     .join("\n\n");
 
-  return `Destaques de IA da semana — ${timestamp} (horário de Brasília)\n\n${body}\n\nResumo automático compilado de buscas públicas. Confirme datas e detalhes nas fontes antes de compartilhar.`;
+  return `📰 *DESTAQUES DE IA DA SEMANA*\n📅 ${timestamp} (horário de Brasília)\n\n${body}\n\n⚠️ Resumo automático de buscas públicas. Confirme datas e detalhes nas fontes.`;
 }
 
 export async function runScheduledNews(options: {
