@@ -51,9 +51,9 @@ export function getScheduledTaskState(): {
 }
 
 const NEWS_QUERIES = [
-  ["OpenAI", "OpenAI latest news announcements 2026"],
-  ["Anthropic", "Anthropic Claude latest news announcements 2026"],
-  ["Google Gemini", "Google Gemini latest news announcements 2026"],
+  ["OpenAI", "OpenAI últimas notícias anúncios 2026"],
+  ["Anthropic", "Anthropic Claude últimas notícias anúncios 2026"],
+  ["Google Gemini", "Google Gemini últimas notícias anúncios 2026"],
   ["IA para negócios", "inteligência artificial negócios empresas novidades 2026"],
 ] as const;
 
