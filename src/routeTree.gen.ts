@@ -14,6 +14,7 @@ import { Route as ApiDiagBridgeRouteImport } from './routes/api/diag-bridge'
 import { Route as ApiImageRouteImport } from './routes/api/image'
 import { Route as ApiScheduledTasksRouteImport } from './routes/api/scheduled-tasks'
 import { Route as ApiTelegramAgentRouteImport } from './routes/api/telegram-agent'
+import { Route as ApiTelegramNotifyRouteImport } from './routes/api/telegram-notify'
 import { Route as ApiTelegramWebhookRouteImport } from './routes/api/telegram-webhook'
 import { Route as ApiTtsRouteImport } from './routes/api/tts'
 import { Route as ApiUploadRouteImport } from './routes/api/upload'
@@ -44,6 +45,11 @@ const ApiScheduledTasksRoute = ApiScheduledTasksRouteImport.update({
 const ApiTelegramAgentRoute = ApiTelegramAgentRouteImport.update({
   id: '/api/telegram-agent',
   path: '/api/telegram-agent',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiTelegramNotifyRoute = ApiTelegramNotifyRouteImport.update({
+  id: '/api/telegram-notify',
+  path: '/api/telegram-notify',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiTelegramWebhookRoute = ApiTelegramWebhookRouteImport.update({
@@ -83,6 +89,7 @@ export interface FileRoutesByFullPath {
   '/api/image': typeof ApiImageRoute
   '/api/scheduled-tasks': typeof ApiScheduledTasksRoute
   '/api/telegram-agent': typeof ApiTelegramAgentRoute
+  '/api/telegram-notify': typeof ApiTelegramNotifyRoute
   '/api/telegram-webhook': typeof ApiTelegramWebhookRoute
   '/api/tts': typeof ApiTtsRoute
   '/api/upload': typeof ApiUploadRoute
@@ -96,6 +103,7 @@ export interface FileRoutesByTo {
   '/api/image': typeof ApiImageRoute
   '/api/scheduled-tasks': typeof ApiScheduledTasksRoute
   '/api/telegram-agent': typeof ApiTelegramAgentRoute
+  '/api/telegram-notify': typeof ApiTelegramNotifyRoute
   '/api/telegram-webhook': typeof ApiTelegramWebhookRoute
   '/api/tts': typeof ApiTtsRoute
   '/api/upload': typeof ApiUploadRoute
@@ -110,6 +118,7 @@ export interface FileRoutesById {
   '/api/image': typeof ApiImageRoute
   '/api/scheduled-tasks': typeof ApiScheduledTasksRoute
   '/api/telegram-agent': typeof ApiTelegramAgentRoute
+  '/api/telegram-notify': typeof ApiTelegramNotifyRoute
   '/api/telegram-webhook': typeof ApiTelegramWebhookRoute
   '/api/tts': typeof ApiTtsRoute
   '/api/upload': typeof ApiUploadRoute
@@ -125,6 +134,7 @@ export interface FileRouteTypes {
     | '/api/image'
     | '/api/scheduled-tasks'
     | '/api/telegram-agent'
+    | '/api/telegram-notify'
     | '/api/telegram-webhook'
     | '/api/tts'
     | '/api/upload'
@@ -138,6 +148,7 @@ export interface FileRouteTypes {
     | '/api/image'
     | '/api/scheduled-tasks'
     | '/api/telegram-agent'
+    | '/api/telegram-notify'
     | '/api/telegram-webhook'
     | '/api/tts'
     | '/api/upload'
@@ -151,6 +162,7 @@ export interface FileRouteTypes {
     | '/api/image'
     | '/api/scheduled-tasks'
     | '/api/telegram-agent'
+    | '/api/telegram-notify'
     | '/api/telegram-webhook'
     | '/api/tts'
     | '/api/upload'
@@ -165,6 +177,7 @@ export interface RootRouteChildren {
   ApiImageRoute: typeof ApiImageRoute
   ApiScheduledTasksRoute: typeof ApiScheduledTasksRoute
   ApiTelegramAgentRoute: typeof ApiTelegramAgentRoute
+  ApiTelegramNotifyRoute: typeof ApiTelegramNotifyRoute
   ApiTelegramWebhookRoute: typeof ApiTelegramWebhookRoute
   ApiTtsRoute: typeof ApiTtsRoute
   ApiUploadRoute: typeof ApiUploadRoute
@@ -208,6 +221,13 @@ declare module '@tanstack/react-router' {
       path: '/api/telegram-agent'
       fullPath: '/api/telegram-agent'
       preLoaderRoute: typeof ApiTelegramAgentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/telegram-notify': {
+      id: '/api/telegram-notify'
+      path: '/api/telegram-notify'
+      fullPath: '/api/telegram-notify'
+      preLoaderRoute: typeof ApiTelegramNotifyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/telegram-webhook': {
@@ -261,6 +281,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiImageRoute: ApiImageRoute,
   ApiScheduledTasksRoute: ApiScheduledTasksRoute,
   ApiTelegramAgentRoute: ApiTelegramAgentRoute,
+  ApiTelegramNotifyRoute: ApiTelegramNotifyRoute,
   ApiTelegramWebhookRoute: ApiTelegramWebhookRoute,
   ApiTtsRoute: ApiTtsRoute,
   ApiUploadRoute: ApiUploadRoute,

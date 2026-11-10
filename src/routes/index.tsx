@@ -207,6 +207,8 @@ function Jarvis() {
   const [tasksState, setTasksState] = useState<ScheduledTaskState | null>(null);
   const [tasksLoading, setTasksLoading] = useState(false);
   const [tasksError, setTasksError] = useState<string | null>(null);
+  const [tgNotify, setTgNotify] = useState<{ id: number; text: string; reply: string } | null>(null);
+  const lastTgNotifyId = useRef(0);
   const [intForm, setIntForm] = useState<{ name: string; kind: "mcp" | "n8n" | "webhook"; url: string; token: string }>({
     name: "",
     kind: "n8n",
@@ -440,6 +442,36 @@ function Jarvis() {
     if (!hydrated || !tasksToken) return;
     void refreshScheduledTasks(tasksToken);
   }, [hydrated, tasksToken, refreshScheduledTasks]);
+
+  // Polling de notificacoes do Telegram (bip + toast quando chega mensagem)
+  useEffect(() => {
+    if (!hydrated) return;
+    const timer = window.setInterval(async () => {
+      try {
+        const res = await fetch("/api/telegram-notify", { cache: "no-store" });
+        if (!res.ok) return;
+        const data = (await res.json()) as { last?: { id: number; text: string; reply: string } | null };
+        const ev = data.last;
+        if (!ev || ev.id <= lastTgNotifyId.current) return;
+        lastTgNotifyId.current = ev.id;
+        setTgNotify({ id: ev.id, text: ev.text, reply: ev.reply });
+        // bip via Web Audio
+        try {
+          const ctx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.frequency.value = 880;
+          gain.gain.value = 0.15;
+          osc.start();
+          osc.stop(ctx.currentTime + 0.15);
+          setTimeout(() => ctx.close(), 300);
+        } catch { /* noop */ }
+      } catch { /* noop */ }
+    }, 5000);
+    return () => window.clearInterval(timer);
+  }, [hydrated]);
 
   useEffect(() => {
     skillsList({}).then((r) => setSkillsData(r ?? [])).catch(() => {});
@@ -949,6 +981,21 @@ function Jarvis() {
 
   return (
     <div className="relative min-h-screen overflow-hidden">
+      {tgNotify && (
+        <div
+          className="fixed bottom-4 right-4 z-50 max-w-sm rounded-lg border border-hud/40 bg-card/95 p-4 shadow-hud backdrop-blur-sm"
+          onClick={() => setTgNotify(null)}
+        >
+          <div className="mb-1 flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-hud">
+            <span>●</span> Mensagem no Telegram
+          </div>
+          <p className="font-mono text-xs text-foreground">{tgNotify.text}</p>
+          {tgNotify.reply && (
+            <p className="mt-1 font-mono text-[10px] text-muted-foreground">Jarvis: {tgNotify.reply}</p>
+          )}
+          <p className="mt-2 font-mono text-[9px] text-muted-foreground/60">clique para fechar</p>
+        </div>
+      )}
       {/* HUD background */}
       <div className="pointer-events-none absolute inset-0 hud-grid opacity-40" />
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-hud to-transparent opacity-70" />
