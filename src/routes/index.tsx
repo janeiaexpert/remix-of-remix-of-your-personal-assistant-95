@@ -339,6 +339,12 @@ function Jarvis() {
     } catch {
       /* noop */
     }
+    try {
+      const sk = window.localStorage.getItem("jarvis:skills:v1");
+      if (sk) setActiveSkills(JSON.parse(sk));
+    } catch {
+      /* noop */
+    }
     setMessages(loadMessages());
     setMemories(loadMemories());
     const paired = readPairingFromHash();
@@ -1257,11 +1263,13 @@ function Jarvis() {
                   <button
                     key={s.id}
                     type="button"
-                    onClick={() =>
-                      setActiveSkills((prev) =>
-                        on ? prev.filter((x) => x !== s.id) : [...prev, s.id],
-                      )
-                    }
+                    onClick={() => {
+                      setActiveSkills((prev) => {
+                        const next = on ? prev.filter((x) => x !== s.id) : [...prev, s.id];
+                        try { window.localStorage.setItem("jarvis:skills:v1", JSON.stringify(next)); } catch { /* noop */ }
+                        return next;
+                      });
+                    }}
                     className={cn(
                       "flex w-full items-start gap-3 rounded border px-3 py-2 text-left transition",
                       on
